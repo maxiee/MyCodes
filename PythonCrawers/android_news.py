@@ -54,6 +54,33 @@ def eoe_crawer(br):
         data.append((sub_cat_name[i], sub_cat_item_list))
     return data
 
+def csdn_crawer(br):
+    sub_cat_url = (
+        'http://blog.csdn.net/mobile/index.html?&page=',
+        'http://blog.csdn.net/mobile/newest.html?&page='
+        )
+    sub_cat_name = (u'最热',u'最新')
+    length = len(sub_cat_name)
+    data = []
+    for i in range(length):
+        baseurl = sub_cat_url[i]
+        sub_cat_item_list = []
+        for j in range(1,10):
+            response = br.open(baseurl+str(j))
+            soup = BeautifulSoup(response)
+            for tag in soup.find_all('div', 'blog_list'):
+                tag_h1 = tag.find('h1').find_all('a')
+                if (len(tag_h1)) == 2:
+                    cat = tag_h1[0].get_text()
+                    title = tag_h1[1].get_text()
+                    url = tag_h1[1].get('href')
+                else:
+                    title = tag_h1[0].get_text()
+                    cat = ''
+                    url = tag_h1[0].get('href')
+                sub_cat_item_list.append((cat + title,url))
+        data.append((sub_cat_name[i], sub_cat_item_list))
+    return data
 
 if __name__ == '__main__':
     # 浏览器伪装
@@ -66,7 +93,7 @@ if __name__ == '__main__':
                       'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
     file = open('[' + time.strftime('%Y%m%d') + ']AndroidNews.html', 'a')
-    data = eoe_crawer(br)
+    data = csdn_crawer(br)
 
     # 遍历分类
     for i in range(len(data)):
