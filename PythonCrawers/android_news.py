@@ -15,10 +15,8 @@ import time
 import sys
 
 reload(sys)
-# for Linux/Unix
-# sys.setdefaultencoding('utf-8')
-# for Windows
-sys.setdefaultencoding('gbk')
+sys.setdefaultencoding('utf-8')
+
 
 
 def eoe_crawer(br):
@@ -82,6 +80,16 @@ def csdn_crawer(br):
         data.append((sub_cat_name[i], sub_cat_item_list))
     return data
 
+def generate_html(file, data):
+    # 遍历分类
+    for i in range(len(data)):
+        # 打印分类
+        file.write('<h2>%s</h2>' % data[i][0])
+        # 遍历分类下条目
+        for j in range(len(data[i][1])):
+            # 打印条目
+            file.write('<p><a href="' + data[i][1][j][1] + '">' + data[i][1][j][0] + '</a></p>')
+
 if __name__ == '__main__':
     # 浏览器伪装
     br = mechanize.Browser()
@@ -93,14 +101,8 @@ if __name__ == '__main__':
                       'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
     file = open('[' + time.strftime('%Y%m%d') + ']AndroidNews.html', 'a')
-    data = csdn_crawer(br)
-
-    # 遍历分类
-    for i in range(len(data)):
-        # 打印分类
-        file.write('<h2>%s</h2>' % data[i][0])
-        # 遍历分类下条目
-        for j in range(len(data[i][1])):
-            # 打印条目
-            file.write('<p><a href="' + data[i][1][j][1] + '">' + data[i][1][j][0] + '</a></p>')
+    generate_html(file,eoe_crawer(br))
+    generate_html(file,csdn_crawer(br))
     file.close()
+
+
