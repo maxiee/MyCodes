@@ -1,4 +1,5 @@
 __author__ = 'maxiee'
+# -*- coding: UTF-8 -*-
 
 import os
 import socket
@@ -6,21 +7,22 @@ import threading
 import SocketServer
 
 SERVER_HOST = 'localhost'
-SERVER_PORT = 0 # tell kernel to pick up a port dynamically
+SERVER_PORT = 0                      # 随机选取一个端口
 BUF_SIZE = 1024
-ECHO_MSG = 'Hello echo server!'
+ECHO_MSG = 'Hello echo server!'  # 客户端发送的数据
 
+# 客户端，封装到类里
 class ForkingClient():
     def __init__(self, ip, port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((ip,port))
 
     def run(self):
+        # 显示客户端的PID
         current_process_id = os.getpid()
         print 'PID %s' %current_process_id
         sent_data_length = self.sock.send(ECHO_MSG)
         print 'Sent %d characters' % sent_data_length
-
         response = self.sock.recv(BUF_SIZE)
         print 'PID %s received: %s' %(current_process_id,response[5:])
 
@@ -31,6 +33,7 @@ class ForkingServerRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         # send the echo back to the client
         data = self.request.recv(BUF_SIZE)
+        # 每有一个客户端请求进来，Server框架就自动创建一个新的进程
         current_pocess_id = os.getpid()
         response = '%s:%s'%(current_pocess_id,data)
         print "Server sending response [%s]" % response
