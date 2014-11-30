@@ -1,4 +1,5 @@
 __author__ = 'maxiee'
+# -*- coding: UTF-8 -*-
 
 import urllib.request
 import re
