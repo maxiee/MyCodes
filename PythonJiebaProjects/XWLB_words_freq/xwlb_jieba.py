@@ -62,7 +62,7 @@ blacklist = [u'看似', u'关系', u'这本', u'接连', u'其', u'》', u'第�
              u'更', u'用', u'“', u'这', u'有', u'在', u'去', u'都', u'”', u'还', u'使', u'，', u'把', u'向',
              u'中', u'新', u'对', u'　', u' ', u')', u'、', u'。', u';', u'%', u'：', u'?', u'(', u'的',
              u'和', u'了', u'等', u'将', u'到', u'', u'央视网', u'新闻联播', u'正在', u'我国', u'通过',
-             u'国际', u'从', u'年', u'今天', u'要', u'并', u'\n']
+             u'国际', u'从', u'年', u'今天', u'要', u'并', u'\n', u'《', u'为', u'月', u'号', u'日', u'大']
 hist = {}
 for word in jieba.cut(content):
     if word in blacklist:
@@ -83,6 +83,7 @@ print "正在绘制柱状图..."
 bar_width = 0.35
 pyplot.bar(range(20), [hist_sorted[i][1] for i in range(20)],bar_width)
 pyplot.xticks(range(20), [hist_sorted[i][0] for i in range(20)], fontproperties=font,rotation=30)
+pyplot.title(u"《新闻联播》词频分析" + yesterday.strftime('20%y%m%d') + u"by Maxiee",fontproperties=font)
 pyplot.show()
 # 打印分词结果，用于调试，创建黑名单
 # for i in range(30):
