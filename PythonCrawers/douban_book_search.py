@@ -11,7 +11,7 @@ import time
     查询豆瓣图书，并返回相关信息
 '''
 
-BOOKNAME = '嵌入式'
+BOOKNAME = 'CSS那些事儿'
 
 URL = 'http://book.douban.com/subject_search?start=0&search_text='+ BOOKNAME
 
@@ -26,15 +26,15 @@ br.addheaders = [('User-agent',
 response = br.open(URL)
 soup = BeautifulSoup(response)
 soup = soup.find('ul','subject-list')
-count = 0
+count = 1
 
 for tag in soup.find_all('li','subject-item'):
-    if count==0:    # 去广告
-        count += 1
-        continue
     info = tag.find('div','info')
     print u'%2d.书名：'%count +info.h2.a.get('title')
+    print u'   连接：'+ tag.find('a','nbg').get('href')
     print u'   信息：'+ info.find('div','pub').get_text().strip()
+    if tag.find('span','pl'):
+        print u'   评价数：'+ tag.find('span','pl').get_text().strip()
     if tag.find('span','rating_nums'):
         print u'   评分：'+ tag.find('span','rating_nums').get_text()
     count += 1

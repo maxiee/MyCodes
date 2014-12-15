@@ -10,7 +10,6 @@ import matplotlib
 
 # 昨天日期
 yesterday = datetime.now() - timedelta(days=1)
-
 ROOT_URL = 'http://cctv.cntv.cn/lm/xinwenlianbo/' + yesterday.strftime('20%y%m%d') + '.shtml'
 print "新闻目录URL：", ROOT_URL
 
