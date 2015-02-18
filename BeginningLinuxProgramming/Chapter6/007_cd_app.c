@@ -7,6 +7,10 @@
 #define MAX_STRING 80
 #define MAX_ENTRY 1024
 
+// On the screen, we use specific row for
+// specific information. So the following
+// defines denotes row number and respongding
+// meaning.
 #define MESSAGE_LINE    6
 #define ERROR_LINE      22
 #define Q_LINE          20
@@ -90,26 +94,36 @@ int main()
     exit(EXIT_SUCCESS);
 }
 
+
+// Draw menu in choices
+// greet is a string as the title
 int getchoice(char *greet, char *choices[])
 {
+    // static, keep the last choice
     static int selected_row = 0;
-    int max_row = 0;
+    int max_row = 0; // menu items count
+    // row, col start to draw
     int start_screenrow = MESSAGE_LINE;
     int start_screencol = 10;
+    // pointer to first character of every menu items
     char **option;
+    // what menu item we selected
     int selected;
-    int key = 0;
+    int key = 0; // which key we pressed.
 
+    // count the number of menu items
     option = choices;
     while (*option) {
         max_row++;
         option++;
     }
 
+    // refine the last choice
     if (selected_row >= max_row)
         selected_row = 0;
 
     clear_all_screen();
+    // output greeting words on the top of screen
     mvprintw(start_screenrow - 2, start_screencol, greet);
 
     keypad(stdscr, TRUE);
@@ -118,6 +132,8 @@ int getchoice(char *greet, char *choices[])
 
     key = 0;
     while (key != 'q' && key != KEY_ENTER && key != '\n') {
+        
+        // circulating 
         if (key == KEY_UP) {
             if (selected_row == 0)
                 selected_row = max_row - 1;
@@ -130,9 +146,11 @@ int getchoice(char *greet, char *choices[])
             else
                 selected_row++;
         }
+
+        // assign first character of menu item to selected
         selected = *choices[selected_row];
         draw_menu(choices, selected_row, start_screenrow, start_screencol);
-        key = getch();
+        key = getch(); // listen to what user type
     }
 
     keypad(stdscr, FALSE);
@@ -141,17 +159,19 @@ int getchoice(char *greet, char *choices[])
 
     if (key == 'q')
         selected = 'q';
-    return (selected);
+    return selected;
 }
 
 void draw_menu(char *options[], int current_highlight, int start_row, int start_col)
 {
     int current_row = 0;
-    char **option_ptr;
-    char *txt_ptr;
+    char **option_ptr; // pointer to the first character of menu items
+    char *txt_ptr; // pointer to strings of menu items
 
     option_ptr = options;
     while (*option_ptr) {
+        // if current row is the selected one
+        // decorate the sides wit ACS_BUULET
         if (current_row == current_highlight) {
             mvaddch(start_row + current_row, start_col - 3, ACS_BULLET);
             mvaddch(start_row + current_row, start_col + 40, ACS_BULLET);
@@ -189,9 +209,11 @@ void get_return()
     int ch;
     mvprintw(23, 0, "%s", " Press return ");
     refresh();
+    // getch() and getchar() are the same?
     while ((ch = getchar()) != '\n' && ch != EOF);
 }
 
+// A yes or no dialog
 int get_confirm()
 {
     int confirmed = 0;
@@ -327,17 +349,17 @@ void find_cd()
 		*found = 0;
 		title = found + 1;
 
-		/* Zap the next comma in the entry to reduce it to title only */
-		if (found = strstr(title, ",")) {
-		    *found = '\0';
+		    /* Zap the next comma in the entry to reduce it to title only */
+		    if (found = strstr(title, ",")) {
+		        *found = '\0';
 
-		    /* Now see if the match substring is present */
-		    if (found = strstr(title, match)) {
-			count++;
-			strcpy(current_cd, title);
-			strcpy(current_cat, catalog);
-		    }
-		}
+		        /* Now see if the match substring is present */
+		        if (found = strstr(title, match)) {
+			        count++;
+			        strcpy(current_cd, title);
+			        strcpy(current_cat, catalog);
+		         }
+	    	}
 	    }
 	}
 	fclose(titles_fp);
