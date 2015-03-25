@@ -10,9 +10,11 @@ def g_h_filter(data, x0, dx, g, h, dt=1., pred=None):
     x = x0
     results = []
     for z in data:
+        print(dx)
         # Prediction Step
         x_est = x + (dx*dt)
-        dx = dx
+        # 这句话什么意思？去掉也是一样，dx的值本来就是变化的
+        # dx = dx
 
         if pred is not None:
             pred.append(x_est)

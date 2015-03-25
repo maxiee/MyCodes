@@ -52,3 +52,10 @@ docs/_build/
 
 # PyBuilder
 target/
+
+.idea/
+MachineLearningInAction/Chapter2/testDigits/
+MachineLearningInAction/Chapter2/trainingDigits/
+
+*.txt
+*.html
