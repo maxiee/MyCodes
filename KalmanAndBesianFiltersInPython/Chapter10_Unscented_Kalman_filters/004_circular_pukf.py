@@ -61,7 +61,8 @@ for i in range(70):
     
     ckf.predict()
     ckf.update([zx,zy])
-    cxs.append(ckf.x)
+    cxs.append(ckf.x[0].copy())
+    print "第%d轮结果:" % (i),ckf.x
     
     #pukf
     pSigma = e(ukf.sigmas_f)
@@ -98,7 +99,7 @@ plt.plot(txs[:,0], txs[:,1],':')
 plt.plot(pxs[:,0], pxs[:,2],'-')
 plt.plot(cxs[:,0], cxs[:,2],'-o')
 #plt.plot(zs[:,.0], zs[:,1],'ro')
-plt.legend(('Filter','True','PUKF'), loc=4)
+plt.legend(('Filter','True','PUKF','CKF'), loc=4)
 plt.show()
 #plt.plot(zs[:,0])
 #plt.plot(zs[:,1])
