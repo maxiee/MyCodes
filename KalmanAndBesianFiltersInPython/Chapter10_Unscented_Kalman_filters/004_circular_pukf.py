@@ -5,6 +5,7 @@ from filterpy.common import Q_discrete_white_noise
 from numpy import random
 import numpy as np
 from matplotlib import pyplot as plt
+from ckf import CubatureKalmanFilter
 
 def f_cv(x, dt):
     F = np.array([[1, dt, 0, 0],
@@ -31,10 +32,17 @@ ukf.R = np.diag([25, 25])
 ukf.Q[0:2,0:2] = Q_discrete_white_noise(2, dt, var=0.04)
 ukf.Q[2:4,2:4] = Q_discrete_white_noise(2, dt, var=0.04)
 
+ckf = CubatureKalmanFilter(dim_x=4, dim_z=2, fx=f_cv, hx=h_cv, dt=dt)
+ckf.x = np.array([100., 0., 0., 0.])
+ckf.R = np.diag([25, 25])
+ckf.Q[0:2,0:2] = Q_discrete_white_noise(2, dt, var=0.04)
+ckf.Q[2:4,2:4] = Q_discrete_white_noise(2, dt, var=0.04)
+
 uxs = []
 pxs = []
 zs = []
 txs = []
+cxs = []
 radius = 100
 delta = 2*np.pi/360*5
 for i in range(70):
@@ -50,6 +58,10 @@ for i in range(70):
     
     ukf.predict()
     ukf.update([zx,zy])
+    
+    ckf.predict()
+    ckf.update([zx,zy])
+    cxs.append(ckf.x)
     
     #pukf
     pSigma = e(ukf.sigmas_f)
@@ -79,10 +91,12 @@ for i in range(70):
 uxs = np.asarray(uxs)
 txs = np.asarray(txs)
 pxs = np.asarray(pxs)
+cxs = np.asarray(cxs)
 zs = np.asarray(zs)
 plt.plot(uxs[:,0], uxs[:,2],'--')
 plt.plot(txs[:,0], txs[:,1],':')
 plt.plot(pxs[:,0], pxs[:,2],'-')
+plt.plot(cxs[:,0], cxs[:,2],'-o')
 #plt.plot(zs[:,.0], zs[:,1],'ro')
 plt.legend(('Filter','True','PUKF'), loc=4)
 plt.show()
