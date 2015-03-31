@@ -45,9 +45,9 @@ txs = []
 cxs = []
 radius = 100
 delta = 2*np.pi/360*5
-for i in range(30):
+for i in range(70):
     # 真实位置
-    target_pos_x = math.cos(i*delta)*radius + random.randn()*0.00
+    target_pos_x = math.cos(i*delta)*radius + random.randn()*0.0001
     target_pos_y = math.sin(i*delta)*radius + random.randn()*0.0001
     txs.append((target_pos_x, target_pos_y))
     
@@ -61,7 +61,7 @@ for i in range(30):
     
     ckf.predict()
     ckf.update([zx,zy])
-    cxs.append(ckf.x[0].copy())
+    cxs.append(ckf.x.copy())
     print "第%d轮结果:" % (i),ckf.x
     
     #pukf
@@ -69,23 +69,13 @@ for i in range(30):
     dHat = np.sum(pSigma)/len(pSigma)
     pddPukf = 0
     pxdPukf = np.zeros((1,4))
-#    print ukf.x
-#    print pSigma[0]
-#    print ukf.sigmas_f[0]
     for i in range(len(pSigma)):
         pddPukf += ukf.W[i]*(
             (pSigma[i] - dHat)*(pSigma[i] - dHat))
         pxdPukf += ukf.W[i]*(
             (ukf.sigmas_f[i]-ukf.x)*(pSigma[i]-dHat))
     pKalman = pxdPukf / pddPukf
-#    print pKalman
-#    print dHat
-#    print pSigma
-    
-    #pukf2
-#    print ukf.K
     pukf = ukf.x + pKalman*(radius-dHat)
-#    print pukf
     pxs.append(pukf[0].copy())
     uxs.append(ukf.x.copy())
     
