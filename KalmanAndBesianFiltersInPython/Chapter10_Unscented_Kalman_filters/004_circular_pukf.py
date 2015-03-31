@@ -45,7 +45,7 @@ txs = []
 cxs = []
 radius = 100
 delta = 2*np.pi/360*5
-for i in range(70):
+for i in range(30):
     # 真实位置
     target_pos_x = math.cos(i*delta)*radius + random.randn()*0.00
     target_pos_y = math.sin(i*delta)*radius + random.randn()*0.0001
