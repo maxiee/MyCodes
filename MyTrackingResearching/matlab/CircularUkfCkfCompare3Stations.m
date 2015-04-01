@@ -1,18 +1,19 @@
 f = @(x,param) [1 param(1) 0 0;0  1 0 0;0  0 1 param(1);0  0 0 1]*x;
 h = @(x, params) ...
-    [sqrt(x(1,:).^2 + x(3,:).^2);
-     atan2(x(3,:),x(1,:))];
+    [atan2(x(1,:),x(3,:));
+    (x(3,:).*x(2,:)-x(1,:).*x(4,:))./(x(1,:).^2+x(3,:).^2);
+    (-10/3)*(x(3,:).*x(2,:)-x(1,:).*x(4,:)).^2./(x(1,:).^2+x(3,:).^2).^1.5];
 
 dt = 1;
 radius = 100;
-delta = 2*pi/360*5;
-count = 30;
+delta = 2*pi/360*5.73;
+count = 70;
 
 txs = zeros(2, count);
 uxs = zeros(4, count);
 cxs = zeros(4, count);
 
-x0 = [100 0 0 0]';
+x0 = [100 0 0 10]';
 P0 = diag([100 10 100 10]);
 
 M_ukf = x0;
@@ -24,7 +25,7 @@ Qv = [(dt^3)/3    (dt^2)/2          0           0;
       (dt^2)/2          dt          0           0;
              0           0   (dt^3)/3    (dt^2)/2;
              0           0   (dt^2)/2          dt]; 
-Qw = diag([25 0.25]);
+Qw = diag([5 5 5]);
 
 for i=1:count
     fprintf('==================第%d轮======================\n',i);
@@ -33,14 +34,18 @@ for i=1:count
     target_pos_y = sin(i*delta)*radius + randn(1)*0.0001;
     txs(:,i) = [target_pos_x; target_pos_y];
     
-    z1 = sqrt(target_pos_x^2+target_pos_y^2) + randn(1)*5;
-    z2 = atan2(target_pos_y, target_pos_x)+randn(1)*0.5;
+    target_vol_x = sin(i*delta)*10;
+    target_vol_y = cos(i*delta)*10;
+    
+    z1 = atan2(target_pos_x, target_pos_y);
+    z2 = (target_pos_y*target_vol_x-target_pos_x*target_vol_y)/(target_pos_x^2+target_pos_y^2);
+    z3 = (-10/3)*(target_pos_y*target_vol_x-target_pos_x*target_vol_y)^2/(target_pos_x^2+target_pos_y^2)^1.5;
     
     [M_ukf, P_ukf,D,upSX,upSY] = ukf_predict1(M_ukf, P_ukf, f, Qv, dt);
-    [M_ukf, P_ukf,uK,uMU,uS,uLH,uuSx,uuSY] = ukf_update1(M_ukf, P_ukf, [z1; z2], h, Qw);
+    [M_ukf, P_ukf,uK,uMU,uS,uLH,uuSx,uuSY] = ukf_update1(M_ukf, P_ukf, [z1; z2; z3], h, Qw);
     
     [M_ckf, P_ckf,cpSX,cpSY] = ckf_predict(M_ckf, P_ckf, f, Qv, dt);
-    [M_ckf, P_ckf,cK,cMU,cS,cLH,cuSx,cuSY] = ckf_update(M_ckf, P_ckf, [z1; z2], h, Qw);
+    [M_ckf, P_ckf,cK,cMU,cS,cLH,cuSx,cuSY] = ckf_update(M_ckf, P_ckf, [z1; z2; z3], h, Qw);
     
 %     fprintf('predict 变换前 Sigma/Cubature 点比较：\n');
 %     upSX
