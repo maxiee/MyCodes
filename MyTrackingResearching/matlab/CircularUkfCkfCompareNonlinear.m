@@ -12,14 +12,14 @@ radius = 100;
 delta = 2*pi/360*5.73;
 count = 62;
 
+x0 = [100 0 0 10 0.1]';
+P0 = diag([100 10 100 10 10]);
+
 txs = zeros(2, count);
 uxs = zeros(5, count);
 puxs = zeros(5, count);
 cxs = zeros(5, count);
 pcxs = zeros(5,count);
-
-x0 = [100 0 0 10 0.1]';
-P0 = diag([100 10 100 10 10]);
 
 M_ukf = x0;
 P_ukf = P0;
