@@ -10,14 +10,14 @@ h = @(x, params) ...
 
 dt = 1;
 radius = 100;
-delta = 2*pi/360*5.73;
+delta = 2*pi/360*5.73*0.5;
 count = 62;
 
 txs = zeros(2, count);
 uxs = zeros(5, count);
 cxs = zeros(5, count);
 
-x0 = [100 0 0 10 0.1]';
+x0 = [100 0 0 5 0.05]';
 P0 = diag([100 10 100 10 100]);
 
 M_ukf = x0;
@@ -36,14 +36,10 @@ Qw = diag([25 0.001]);
 for i=1:count
     fprintf('==================µÚ%dÂÖ======================\n',i);
     
-%     target_pos_x = cos(i*delta)*radius + randn(1)*0.0001;
-%     target_pos_y = sin(i*delta)*radius + randn(1)*0.0001;
-    target_pos_x = 20*i^2
-    target_pos_y = 50*i
+    target_pos_x = cos(i*delta)*radius + randn(1)*0.0001;
+    target_pos_y = sin(i*delta)*radius + randn(1)*0.0001;
     txs(:,i) = [target_pos_x; target_pos_y];
     
-%     zx = target_pos_x + randn(1)*5;
-%     zy = target_pos_y + randn(1)*5;
     zx = sqrt(target_pos_x^2 + target_pos_y^2)+randn(1)*5;
     zy = atan2(target_pos_y,target_pos_x);
     
