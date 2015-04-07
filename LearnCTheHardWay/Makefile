@@ -1,0 +1,6 @@
+CFLAGS=-Wall -g
+
+all:001_ex1_hello 002_ex3_formatted_print 003_ex6_types_of_variables 004_ex7_more_variables 005_size_and_arrays 006_arrays_and_strings 007_strings_looping 008_writing_and_using_functions
+clean:
+	rm -f 001_ex1_hello 002_ex3_formatted_print 003_ex6_types_of_variables 004_ex7_more_variables 005_size_and_arrays 006_arrays_and_strings 007_strings_looping 008_writing_and_using_functions
+
