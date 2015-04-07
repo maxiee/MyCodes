@@ -61,3 +61,4 @@ MachineLearningInAction/Chapter2/trainingDigits/
 *.html
 *.asv
 *.out
+flaskr/venv
