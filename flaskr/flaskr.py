@@ -15,6 +15,7 @@ from flask.ext.wtf import Form
 from flask.ext.pagedown.fields import PageDownField
 from flask.ext.pagedown import PageDown
 from wtforms.fields import SubmitField
+from flask_bootstrap import Bootstrap
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, _app_ctx_stack, jsonify
 
@@ -30,6 +31,7 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 pagedown = PageDown(app)
+Bootstrap(app)
 
 
 def init_db():
@@ -81,7 +83,7 @@ class PageDownFormExample(Form):
 
 @app.route('/add', methods=['GET','POST'])
 def add_entry():
-        if not session.get('logged_in'):
+    if not session.get('logged_in'):
         abort(401)
     text = "编辑 Markdown"
     form = PageDownFormExample()
