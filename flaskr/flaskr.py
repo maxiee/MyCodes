@@ -11,6 +11,10 @@
 """
 
 from sqlite3 import dbapi2 as sqlite3
+from flask.ext.wtf import Form
+from flask.ext.pagedown.fields import PageDownField
+from flask.ext.pagedown import PageDown
+from wtforms.fields import SubmitField
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, _app_ctx_stack
 
@@ -25,6 +29,7 @@ PASSWORD = 'default'
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+pagedown = PageDown(app)
 
 
 def init_db():
@@ -57,24 +62,39 @@ def close_db_connection(exception):
         top.sqlite_db.close()
 
 
-@app.route('/')
+@app.route('/', methods=['GET','POST'])
 def show_entries():
+    form = PageDownFormExample()
+    text = None
+    if form.validate_on_submit():
+        text = form.pagedown.data
+    form.pagedown.data = "编辑 Markdown"
     db = get_db()
     cur = db.execute('select title, text from entries order by id desc')
     entries = cur.fetchall()
-    return render_template('show_entries.html', entries=entries)
+    #return render_template('show_entries.html', entries=entries)
+    return render_template('show_entries.html', form=form, text=text)
 
 
-@app.route('/add', methods=['POST'])
+class PageDownFormExample(Form):
+    pagedown = PageDownField('Enter your markdown')
+    submit = SubmitField('submit')
+
+@app.route('/add', methods=['GET','POST'])
 def add_entry():
     if not session.get('logged_in'):
         abort(401)
+    text = "编辑 Markdown"
+    form = PageDownFormExample()
+    if form.validate_on_submit():
+        text = form.pagedown.data
     db = get_db()
     db.execute('insert into entries (title, text) values (?, ?)',
                  [request.form['title'], request.form['text']])
     db.commit()
     flash('New entry was successfully posted')
-    return redirect(url_for('show_entries'))
+    #return redirect(url_for('show_entries'))
+    return render_template('show_entries.html', form=form, text=text)
 
 
 @app.route('/login', methods=['GET', 'POST'])
