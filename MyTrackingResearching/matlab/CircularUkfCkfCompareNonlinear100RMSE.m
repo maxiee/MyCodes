@@ -15,7 +15,7 @@ count = 100;
 x0 = [100 0 0 10 0.1]';
 P0 = diag([100 10 100 10 10]);
 
-Loop = 50;
+Loop = 150;
 
 Qv = [0.1/3     0.1/2   0         0         0;
       0.1/2     0.1     0         0         0;
@@ -157,37 +157,47 @@ PCKF_RMSE3 = sqrt(PCKF_RMSE3./Loop);
 PCKF_RMSE4 = sqrt(PCKF_RMSE4./Loop);
 
 T = 1:15:count;
+T2 = 1:5:size(vUKF_RMSE1,2);
 
 figure;
 vUKF_RMSE1 = spcrv([T;UKF_RMSE1(T)],3);
 vPUKF_RMSE1 = spcrv([T;PUKF_RMSE1(T)],3);
 vCKF_RMSE1 = spcrv([T;CKF_RMSE1(T)],3);
 vPCKF_RMSE1 = spcrv([T;PCKF_RMSE1(T)],3);
-
-T2 = 1:5:size(vUKF_RMSE1,2);
-
 plot(vUKF_RMSE1(1,T2),vUKF_RMSE1(2,T2),'k-s',vPUKF_RMSE1(1,T2),vPUKF_RMSE1(2,T2),'k-d',vCKF_RMSE1(1,T2),vCKF_RMSE1(2,T2),'r-o',vPCKF_RMSE1(1,T2),vPCKF_RMSE1(2,T2),'k-o');
 legend('UKF','PUKF','CKF','PCKF');
 xlabel('t,s');
 ylabel('RMSE,m')
 
-% figure;
-% plot(T,UKF_RMSE2(T),'k-s',T,PUKF_RMSE2(T),'k-d',T,CKF_RMSE2(T),'r-o',T,PCKF_RMSE2(T),'k-o');
-% legend('UKF','PUKF','CKF','PCKF');
-% xlabel('t,s');
-% ylabel('RMSE,m')
-% 
-% figure;
-% plot(T,UKF_RMSE3(T),'k-s',T,PUKF_RMSE3(T),'k-d',T,CKF_RMSE3(T),'r-o',T,PCKF_RMSE3(T),'k-o');
-% legend('UKF','PUKF','CKF','PCKF');
-% xlabel('t,s');
-% ylabel('RMSE,m/s')
-% 
-% figure;
-% plot(T,UKF_RMSE4(T),'k-s',T,PUKF_RMSE4(T),'k-d',T,CKF_RMSE4(T),'r-o',T,PCKF_RMSE4(T),'k-o');
-% legend('UKF','PUKF','CKF','PCKF');
-% xlabel('t,s');
-% ylabel('RMSE,m/s')
+figure;
+vUKF_RMSE2 = spcrv([T;UKF_RMSE2(T)],3);
+vPUKF_RMSE2 = spcrv([T;PUKF_RMSE2(T)],3);
+vCKF_RMSE2 = spcrv([T;CKF_RMSE2(T)],3);
+vPCKF_RMSE2 = spcrv([T;PCKF_RMSE2(T)],3);
+plot(vUKF_RMSE2(1,T2),vUKF_RMSE2(2,T2),'k-s',vPUKF_RMSE2(1,T2),vPUKF_RMSE2(2,T2),'k-d',vCKF_RMSE2(1,T2),vCKF_RMSE2(2,T2),'r-o',vPCKF_RMSE2(1,T2),vPCKF_RMSE2(2,T2),'k-o');
+legend('UKF','PUKF','CKF','PCKF');
+xlabel('t,s');
+ylabel('RMSE,m')
+
+figure;
+vUKF_RMSE3 = spcrv([T;UKF_RMSE3(T)],3);
+vPUKF_RMSE3 = spcrv([T;PUKF_RMSE3(T)],3);
+vCKF_RMSE3 = spcrv([T;CKF_RMSE3(T)],3);
+vPCKF_RMSE3 = spcrv([T;PCKF_RMSE3(T)],3);
+plot(vUKF_RMSE3(1,T2),vUKF_RMSE3(2,T2),'k-s',vPUKF_RMSE3(1,T2),vPUKF_RMSE3(2,T2),'k-d',vCKF_RMSE3(1,T2),vCKF_RMSE3(2,T2),'r-o',vPCKF_RMSE3(1,T2),vPCKF_RMSE3(2,T2),'k-o');
+legend('UKF','PUKF','CKF','PCKF');
+xlabel('t,s');
+ylabel('RMSE,m/s')
+
+figure;
+vUKF_RMSE4 = spcrv([T;UKF_RMSE4(T)],3);
+vPUKF_RMSE4 = spcrv([T;PUKF_RMSE4(T)],3);
+vCKF_RMSE4 = spcrv([T;CKF_RMSE4(T)],3);
+vPCKF_RMSE4 = spcrv([T;PCKF_RMSE4(T)],3);
+plot(vUKF_RMSE4(1,T2),vUKF_RMSE4(2,T2),'k-s',vPUKF_RMSE4(1,T2),vPUKF_RMSE4(2,T2),'k-d',vCKF_RMSE4(1,T2),vCKF_RMSE4(2,T2),'r-o',vPCKF_RMSE4(1,T2),vPCKF_RMSE4(2,T2),'k-o');
+legend('UKF','PUKF','CKF','PCKF');
+xlabel('t,s');
+ylabel('RMSE,m/s')
 
 
 
