@@ -68,7 +68,6 @@ def show_entries():
     text = None
     if form.validate_on_submit():
         text = form.pagedown.data
-    form.pagedown.data = "编辑 Markdown"
     db = get_db()
     cur = db.execute('select title, text from entries order by id desc')
     entries = cur.fetchall()
@@ -82,7 +81,7 @@ class PageDownFormExample(Form):
 
 @app.route('/add', methods=['GET','POST'])
 def add_entry():
-    if not session.get('logged_in'):
+        if not session.get('logged_in'):
         abort(401)
     text = "编辑 Markdown"
     form = PageDownFormExample()
