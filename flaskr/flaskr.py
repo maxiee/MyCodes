@@ -16,7 +16,7 @@ from flask.ext.pagedown.fields import PageDownField
 from flask.ext.pagedown import PageDown
 from wtforms.fields import SubmitField
 from flask import Flask, request, session, g, redirect, url_for, abort, \
-     render_template, flash, _app_ctx_stack
+     render_template, flash, _app_ctx_stack, jsonify
 
 # configuration
 DATABASE = '/tmp/flaskr.db'
@@ -118,6 +118,12 @@ def logout():
     flash('You were logged out')
     return redirect(url_for('show_entries'))
 
+
+@app.route('/_add_numbers')
+def add_numbers():
+    a = request.args.get('a', 0, type=int)
+    b = request.args.get('b', 0, type=int)
+    return jsonify(result=a + b)
 
 if __name__ == '__main__':
     init_db()
