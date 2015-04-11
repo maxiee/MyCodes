@@ -58,7 +58,6 @@ MachineLearningInAction/Chapter2/testDigits/
 MachineLearningInAction/Chapter2/trainingDigits/
 
 *.txt
-*.html
 *.asv
 *.out
 flaskr/venv
