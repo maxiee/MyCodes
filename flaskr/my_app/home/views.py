@@ -4,6 +4,7 @@ from flask.ext.pagedown import PageDown
 from wtforms.fields import SubmitField
 from flask import render_template
 from my_app import app
+from my_app.utils import contentManager
 
 class PageDownFormExample(Form):
     pagedown = PageDownField('Enter your markdown')
@@ -18,6 +19,6 @@ def home():
     return render_template(
             'show_entries.html',
             form = form,
-            text = text)
-
-
+            text = text,
+            content = contentManager.getContent()
+            )

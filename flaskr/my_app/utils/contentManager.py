@@ -1,13 +1,10 @@
 from pathlib import Path
 import json
 
-p = Path('../posts')
+p = Path('.') / 'my_app' / 'posts'
 results = [] 
 
-for x in p.iterdir():
-    print(x)
-
-def generateContent(p):
+def generateContent(p=p):
     r = []
     dfs = p.iterdir()
     for i in dfs:
@@ -15,7 +12,8 @@ def generateContent(p):
             dir_dict = {}
             dir_dict['text'] = i.name
             res = generateContent(i)
-            dir_dict['nodes'] = res
+            if res is not []:
+                dir_dict['nodes'] = res
             r.append(dir_dict)
         else: # file
             file_dict = {}
@@ -23,4 +21,8 @@ def generateContent(p):
             r.append(file_dict)
     return r
 
-print(json.dumps(generateContent(p), indent=4))
+def getContent():
+    return json.dumps(generateContent())
+
+if __name__ == "__main__":
+    print(getContent())

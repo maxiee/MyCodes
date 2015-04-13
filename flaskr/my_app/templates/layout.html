@@ -40,6 +40,8 @@
             <p><a href="javascript:OpenLatexEditor('testbox','html','')">
             Launch CodeCogs Equation Editor
             </a></p>
+            {{ content}}
+            <div id="tree"></div>
         </div>
     </div>
 </div>
@@ -66,39 +68,7 @@ $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
 <script type="text/javascript" src="http://latex.codecogs.com/editor3.js"></script>
 <script src="{{url_for('.static', filename='bootstrap-treeview.min.js')}}"></script>
 <script type="text/javascript">
-var tree = [
-  {
-    text: "Parent 1",
-    nodes: [
-      {
-        text: "Child 1",
-        nodes: [
-          {
-            text: "Grandchild 1"
-          },
-          {
-            text: "Grandchild 2"
-          }
-        ]
-      },
-      {
-        text: "Child 2"
-      }
-    ]
-  },
-  {
-    text: "Parent 2"
-  },
-  {
-    text: "Parent 3"
-  },
-  {
-    text: "Parent 4"
-  },
-  {
-    text: "Parent 5"
-  }
-];
+var tree = eval('({{ content|safe }})');
 $('#tree').treeview({data: tree});
 </script>
 {% endblock %}
