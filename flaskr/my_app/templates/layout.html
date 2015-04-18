@@ -69,7 +69,12 @@ $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
 <script src="{{url_for('.static', filename='bootstrap-treeview.min.js')}}"></script>
 <script type="text/javascript">
 var tree = eval('({{ content|safe }})');
-$('#tree').treeview({data: tree, enableLinks: true});
+$('#tree').treeview(
+        {
+            data: tree, 
+            enableLinks: true,
+            levels:5
+        });
 </script>
 {% endblock %}
 

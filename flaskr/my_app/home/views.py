@@ -16,14 +16,11 @@ def home(url):
     text = None
     if form.validate_on_submit():
         text = form.pagedown.data
-    if url == '':
-        post = ''
-    else:
-        post = contentManager.getPost(url)
+    post = contentManager.getPost(url)
     return render_template(
         'show_entries.html',
         form = form,
         text = text,
         post = post,
-        content = contentManager.getContent()
+        content = contentManager.getContent(url)
     )
