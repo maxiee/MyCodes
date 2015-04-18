@@ -18,6 +18,7 @@ def generateContent(p=p):
         else: # file
             file_dict = {}
             file_dict['text'] = i.name
+            file_dict['href'] = str(i)[str(i).find('posts')+len('posts/'):].replace('.mk','')
             r.append(file_dict)
     return r
 
