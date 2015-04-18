@@ -3,6 +3,7 @@ import json
 
 p = Path('.') / 'my_app' / 'posts'
 results = [] 
+seperator = '-'
 
 def generateContent(p, url):
     import urllib.parse
@@ -20,7 +21,7 @@ def generateContent(p, url):
             file_dict = {}
             file_dict['text'] = i.name
             file_dict['href'] = str(i)[str(i).find('posts')+len('posts/'):].replace('.mk','').replace("/","-")
-            if i.name.replace(".mk",'') in url:
+            if i.name.replace(".mk",'') == url.split(seperator)[-1]:
                 file_dict['state'] = {'selected':True}
             r.append(file_dict)
     return r
