@@ -18,12 +18,21 @@ def generateContent(p=p):
         else: # file
             file_dict = {}
             file_dict['text'] = i.name
-            file_dict['href'] = str(i)[str(i).find('posts')+len('posts/'):].replace('.mk','')
+            file_dict['href'] = str(i)[str(i).find('posts')+len('posts/'):].replace('.mk','').replace("/","-")
             r.append(file_dict)
     return r
 
 def getContent():
     return json.dumps(generateContent())
+
+def getPost(url):
+    try:
+        post = open(str(p)+'/'+url.replace("-","/")+'.mk')
+    except:
+        return str(p)+url.replace("-","/")+'.mk'
+    post = post.read()
+    import markdown
+    return markdown.markdown(post)
 
 if __name__ == "__main__":
     print(getContent())

@@ -10,15 +10,20 @@ class PageDownFormExample(Form):
     pagedown = PageDownField('Enter your markdown')
     submit = SubmitField('submit')
 
-@app.route('/', methods=['GET'])
-def home():
+@app.route('/<url>', methods=['GET'])
+def home(url):
     form = PageDownFormExample()
     text = None
     if form.validate_on_submit():
         text = form.pagedown.data
+    if url == '':
+        post = ''
+    else:
+        post = contentManager.getPost(url)
     return render_template(
-            'show_entries.html',
-            form = form,
-            text = text,
-            content = contentManager.getContent()
-            )
+        'show_entries.html',
+        form = form,
+        text = text,
+        post = post,
+        content = contentManager.getContent()
+    )
