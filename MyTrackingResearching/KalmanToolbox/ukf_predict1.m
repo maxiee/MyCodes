@@ -33,14 +33,14 @@
 %   UKF_UPDATE1, UKF_PREDICT2, UKF_UPDATE2, UKF_PREDICT3, UKF_UPDATE3,
 %   UT_TRANSFORM, UT_WEIGHTS, UT_MWEIGHTS, UT_SIGMAS
 
-% Copyright (C) 2003-2006 Simo Sï¿½rkkï¿?%
+% Copyright (C) 2003-2006 Simo Sï¿½rkkï¿½?%
 % $Id: ukf_predict1.m 483 2010-10-18 08:54:19Z jmjharti $
 %
 % This software is distributed under the GNU General Public
 % Licence (version 2 or later); please refer to the file
 % Licence.txt, included with the software, for details.
 
-function [M,P,D,SX,SY] = ukf_predict1(M,P,f,Q,f_param,alpha,beta,kappa,mat)
+function [M,P,D,SX,SY,w] = ukf_predict1(M,P,f,Q,f_param,alpha,beta,kappa,mat)
 
   %
   % Check which arguments are there
@@ -89,7 +89,7 @@ function [M,P,D,SX,SY] = ukf_predict1(M,P,f,Q,f_param,alpha,beta,kappa,mat)
   %
   
   tr_param = {alpha beta kappa mat};
-  [M,P,D,SX,SY] = ut_transform(M,P,f,f_param,tr_param);
+  [M,P,D,SX,SY,w] = ut_transform(M,P,f,f_param,tr_param);
 
   P = P + Q;
 
