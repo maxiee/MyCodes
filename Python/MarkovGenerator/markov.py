@@ -1,5 +1,6 @@
 import random
 import re
+from pathlib import Path
 
 def generateModel(text, order):
     model = {}
@@ -35,11 +36,18 @@ def generateText(text, order, length):
     return output
 
 def pureText(text):
-    return re.sub("[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、“”：~@#￥%……&*（）]+", "", text)  
+    return re.sub("[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？《》、“”：~@#￥%……&*（）]+", "", text)  
 
-text = open('from_weibo_233.txt').read()
+path = Path('yuliao')
+text = ""
+dfs = path.iterdir()
+for i in dfs:
+    if not i.is_dir():
+        #print("加载语料:%s" % i.name)
+        text += i.open().read()
 
-print('作为一个懂 Markov chain 的 Python，一开始让我讲段子我也是拒绝的。 看你姿势水平这么需要加强，我就赐你 20 句金玉良言：\n')
+count = 3
+print('作为一个懂 Markov chain 的 Python，一开始让我讲段子我也是拒绝的。 看你姿势水平这么需要加强，我就赐你 %d 句金玉良言：\n' % count)
 
-for i in range(20):
-    print('%d. '% i + generateText(pureText(text), 2, 20) + '\n')
+for i in range(count):
+    print('%d. '% i + generateText(pureText(text), 2, 50) + '\n')
