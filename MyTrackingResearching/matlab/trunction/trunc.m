@@ -7,11 +7,12 @@ radius = 100;
 delta = 2*pi/360*5;
 count = 70;
 E0 = radius*radius;
-global E0;
 
 txs = zeros(2, count); % target true
 uxs = zeros(4, count); % UKF estimate
 ttxs = zeros(4, count); % trunction estimation
+cxs = zeros(4, count); % CKF estimate
+tcxs = zeros(4, count); % TCKF
 
 
 x0 = [radius 0 0 0]';
@@ -19,6 +20,8 @@ P0 = diag([100 10 100 10]);
 
 M_ukf = x0;
 P_ukf = P0;
+M_ckf = x0;
+P_ckf = P0;
 
 Qv = [(dt^3)/3    (dt^2)/2          0           0; 
       (dt^2)/2          dt          0           0;
@@ -42,40 +45,24 @@ for i=1:count
     [M_ukf, P_ukf] = ukf_update1(M_ukf, P_ukf, [zx; zy], h, Qw);
     uxs(:,i) = M_ukf;
 
-    % Truncation
-    PTrunc = P_ukf;
-    xTrunc = M_ukf;
-    [D, E2, d] = ConstraintDeriv(xTrunc, E0, E);
-    % only 1 constraint
-    [Utrunc, Wtrunc, Vtrunc] = svd(PTrunc);
-    Ttrunc = Utrunc;
-    TTT = Ttrunc * Ttrunc';
-    if (norm(eye(size(TTT)) - TTT) > 1e-8)
-        disp('Error - Ttrunc is not orthogonal.');
-        return;
-    end
-    if (norm(Utrunc*Wtrunc*Utrunc' - PTrunc) > 1e-8)
-        disp('Error - SVD failed for trunction');
-        return;
-    end
-    % Gram-Schmidt
-    Amgs = sqrt(Wtrunc) * Ttrunc' * D';
-    [Wmgs, S] = MGS(Amgs);
-    S = S * sqrt(D * PTrunc * D') / Wmgs;
-    cTrunc = (d - D * xTrunc) / sqrt(D * PTrunc * D');
-    dTrunc = (d - D * xTrunc) / sqrt(D * PTrunc * D');
+    % UKF truncation
+    [M_tukf, P_tukf] = truncation(M_ukf, P_ukf, E0, E);
+    ttxs(:,i) = M_tukf;
 
-    mu = cTrunc;
-    sigma2 = 0;
+    % CKF
+    [M_ckf, P_ckf] = ckf_predict(M_ckf, P_ckf, f, Qv, dt);
+    [M_ckf, P_ckf] = ckf_update(M_ckf, P_ckf, [zx; zy], h, Qw);
+    cxs(:,i) = M_ckf;
 
-    zTrunc = zeros(size(xTrunc));
-    zTrunc(1) = mu;
-    CovZ = eye(length(zTrunc));
-    CovZ(1,1) = sigma2;
-    xTrunc = Ttrunc * sqrt(Wtrunc) * S' * zTrunc + xTrunc;
-    PTrunc = Ttrunc * sqrt(Wtrunc) * S' * CovZ * S * sqrt(Wtrunc) * Ttrunc';
-    ttxs(:,i) = xTrunc;
+    % TCKF
+    [M_tckf, P_tckf] = truncation(M_ckf, P_ckf, E0, E);
+    tcxs(:,i) = M_tckf;
+
 end
 
-plot(txs(1,:), txs(2,:),'-o', uxs(1,:), uxs(3,:),'-^', ttxs(1,:), ttxs(3,:));
-legend('True','UKF','TUKF');
+plot(txs(1,:), txs(2,:),'-o', ...
+    uxs(1,:), uxs(3,:),'-^', ...
+    ttxs(1,:), ttxs(3,:),'-+', ...
+    cxs(1,:), cxs(3,:), '-x', ...
+    tcxs(1,:), tcxs(3,:),'-*');
+legend('True','UKF','TUKF','CKF','TCKF');
