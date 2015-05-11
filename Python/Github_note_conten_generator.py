@@ -9,6 +9,8 @@ URL_BASE = 'https://github.com/maxiee/MyNotes/blob/master'
 blacklist = ['.git']
 file_blacklist = ['.png', 'README.md', '.directory']
 
+spaces = '&ensp;'*4
+
 def generateContent(p, dep):
     res = []
     depth = dep+1
@@ -18,12 +20,15 @@ def generateContent(p, dep):
             if i.name not in blacklist:
                 # print(i.name)
                 if depth == 0:
-                    prefix = '###'
+                    prefix = '**'
+                    postfix = '**'
                 elif depth == 1:
-                    prefix = '####'
+                    prefix = '│' + spaces + '├──'
+                    postfix = ''
                 else:
                     prefix = ''
-                res.append(prefix+i.name+'\n')
+                    postfix = ''
+                res.append(prefix+i.name+postfix+'\n')
                 res.append(generateContent(i, depth))
         else:
             to_pass = False
@@ -32,7 +37,7 @@ def generateContent(p, dep):
                     to_pass = True
                     break
             if not to_pass:
-                res.append('* ' + '[%s](%s)' %(i.name, URL_BASE+str(i)[str(i).index(str(path))+p_len:])+'\n')
+                res.append('│'+spaces + '│' + spaces + '├──' + '[%s](%s)' %(i.name, URL_BASE+str(i)[str(i).index(str(path))+p_len:])+'\n')
     return res
 
 def isPureList(lst):

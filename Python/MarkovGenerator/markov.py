@@ -44,9 +44,13 @@ dfs = path.iterdir()
 for i in dfs:
     if not i.is_dir():
         #print("加载语料:%s" % i.name)
+        #if i.name == "from_weibo_233.txt":
+            #print("搞笑加强")
+            #for k in range(5):
+            #    text += i.open().read()
         text += i.open().read()
 
-count = 3
+count = 5 
 print('作为一个懂 Markov chain 的 Python，一开始让我讲段子我也是拒绝的。 看你姿势水平这么需要加强，我就赐你 %d 句金玉良言：\n' % count)
 
 for i in range(count):
