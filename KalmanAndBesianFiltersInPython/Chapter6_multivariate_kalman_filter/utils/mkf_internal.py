@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.random import multivariate_normal
-import stats
+import utils.stats as stats
 
 def show_residual_chart():
     plt.xlim([0.9,2.5])
@@ -229,7 +229,7 @@ def plot_3d_covariance(mean, cov):
 
     ax.contour(xv, yv, zv, zdir='x', offset=minx-1, cmap=cm.autumn)
     ax.contour(xv, yv, zv, zdir='y', offset=maxy, cmap=cm.BuGn)
-
+    
 
 def plot_3d_sampled_covariance(mean, cov):
     """ plots a 2x2 covariance matrix positioned at mean. mean will be plotted
@@ -284,6 +284,7 @@ def plot_3d_sampled_covariance(mean, cov):
 
     ax.contour(xv, yv, zv, zdir='x', offset=minx-1, cmap=cm.autumn)
     ax.contour(xv, yv, zv, zdir='y', offset=maxy, cmap=cm.BuGn)
+    plt.show()
 
 
 if __name__ == "__main__":
