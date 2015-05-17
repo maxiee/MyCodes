@@ -1,6 +1,8 @@
 import numpy as np
 from numpy import linalg as LA
 
+x0 = np.array([1000, 1000, 1000]).T
+
 A = np.array([
     [0,   0, .33],
     [.18, 0, 0  ],
@@ -8,10 +10,6 @@ A = np.array([
 
 w,v = LA.eig(A)
 
-for i in range(w.size):
-    print("特征值:", w[i])
-    print("前10步解:")
-    temp = v[:, i].T
-    for j in range(10):
-        temp = w[i] * temp
-        print("\t%d: " % j, temp)
+print("特征值:",w)
+print("特征向量:",v)
+# c = LA.inv(v).dot(x0)
