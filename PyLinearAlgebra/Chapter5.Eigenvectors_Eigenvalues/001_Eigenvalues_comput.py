@@ -2,8 +2,8 @@ import numpy as np
 from numpy import linalg as LA
 
 A = np.array([
-        [.95, .03],
-        [.05, .97]])
+        [.5, -.6],
+        [.75, 1.1]])
 
 w,v = LA.eig(A)
 
