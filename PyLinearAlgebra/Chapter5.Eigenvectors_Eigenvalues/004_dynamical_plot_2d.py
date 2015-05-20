@@ -15,5 +15,6 @@ for i in range(10):
     xs.append(init[0])
     ys.append(init[1])
 
+
 plt.plot(xs, ys, '--o')
 plt.show()
