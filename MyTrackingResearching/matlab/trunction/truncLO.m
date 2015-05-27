@@ -7,7 +7,8 @@ count = 70;
 E0 = radius*radius;
 
 f = @(x,param) [1 param(1) 0 0;0  1 0 0;0  0 1 param(1);0  0 0 1]*x;
-h = @(x, params) [sqrt(x(1,:).^2+x(3,:).^2); atan2(x(3,:),x(1,:))];
+%h = @(x, params) [sqrt(x(1,:).^2+x(3,:).^2); atan2(x(3,:),x(1,:))];
+h = @(x, params) [x(1,:);x(3,:)];
 E = @(X) (X(1,:)-origin).^2 + (X(3,:)-origin).^2;
 
 x0 = [origin+radius 0 origin 15]';
@@ -18,7 +19,7 @@ Qv = [(dt^3)/3    (dt^2)/2          0           0;
              0           0   (dt^3)/3    (dt^2)/2;
              0           0   (dt^2)/2          dt]; 
 rw = 25;
-Qw = diag([rw 2*pi/180]);
+Qw = diag([rw rw]);
 
 Loop = 100;
 
@@ -46,14 +47,15 @@ for loop = 1:Loop
 
     for i=1:count
         
-        target_pos_x = origin + cos(i*delta)*radius + randn(1)*.1;
-        target_pos_y = origin + sin(i*delta)*radius + randn(1)*.1;
+        target_pos_x = origin + cos(i*delta)*radius + randn(1)*20;
+        target_pos_y = origin + sin(i*delta)*radius + randn(1)*20;
         target_vec_x = radius*delta*sin(i*delta);
         target_vec_y = radius*delta*cos(i*delta);
         X(:,i) = [target_pos_x; target_vec_x; target_pos_y; target_vec_y];
         txs(:,i) = [target_pos_x; target_pos_y];
 
-        zs = h([target_pos_x 0 target_pos_y 0]') + [sqrt(rw); sqrt(2*pi/180)];
+        %zs = h([target_pos_x 0 target_pos_y 0]') + [sqrt(rw); sqrt(2*pi/180)];
+        zs = h(X(:,i), dt) + [sqrt(rw); sqrt(rw)];
         zss(:,i) = zs;
 
         % UKF
@@ -172,21 +174,19 @@ TCKF_b_RMSE1 = sqrt(TCKF_b_RMSE1./Loop);
 TCKF_b_RMSE2 = sqrt(TCKF_b_RMSE2./Loop);
 TCKF_b_RMSE3 = sqrt(TCKF_b_RMSE3./Loop);
 TCKF_b_RMSE4 = sqrt(TCKF_b_RMSE4./Loop);
-TCKF_b_RMSE3 = TCKF_b_RMSE3 * .95;
-TCKF_b_RMSE4 = TCKF_b_RMSE4 * .85;
 
 if Loop ~= 1
     T = 1:count;
     figure;
-    plot(T,TUKF_RMSE1,'-ko',T,TCKF_RMSE1,'-k^',T,TCKF_b_RMSE1,'-k*');
+    plot(T,TUKF_RMSE1,T,TCKF_RMSE1,T,TCKF_b_RMSE1);
     legend('TUKF','TCKF','TCKF-b');
     figure;
-    plot(T,TUKF_RMSE2,'-ko',T,TCKF_RMSE2,'-k^',T,TCKF_b_RMSE2,'-k*');
+    plot(T,TUKF_RMSE2,T,TCKF_RMSE2,T,TCKF_b_RMSE2);
     legend('TUKF','TCKF','TCKF-b');
     figure;
-    plot(T,TUKF_RMSE3,'-ko',T,TCKF_RMSE3,'-k^',T,TCKF_b_RMSE3,'-k*');
+    plot(T,TUKF_RMSE3,T,TCKF_RMSE3,T,TCKF_b_RMSE3);
     legend('TUKF','TCKF','TCKF-b');
     figure;
-    plot(T,TUKF_RMSE4,'-ko',T,TCKF_RMSE4,'-k^',T,TCKF_b_RMSE4,'-k*');
+    plot(T,TUKF_RMSE4,T,TCKF_RMSE4,T,TCKF_b_RMSE4);
     legend('TUKF','TCKF','TCKF-b');
 end
