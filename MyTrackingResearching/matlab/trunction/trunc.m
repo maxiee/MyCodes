@@ -75,7 +75,7 @@ for loop = 1:Loop
         tcxs(:,i) = M_tckf;
         
         % TCKF-b
-        angle = atan2(M_ukf(3,:),M_ukf(1,:));
+        angle = atan2(M_ckf(3,:),M_ckf(1,:));
         dx = sqrt(P_ckf(1,1));
         dy = sqrt(P_ckf(3,3));
         delta_r = max(abs(dx*cos(angle)), abs(dy*sin(angle)));
