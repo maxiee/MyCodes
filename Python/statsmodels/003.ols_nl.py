@@ -22,6 +22,8 @@ results = model.fit()
 params = results.params
 #print(results.summary())
 
+prstd, iv_l, iv_u = wls_prediction_std(results)
+
 # 分量1 
 plt.plot(x, params[0]*x, '--', label='sub-func 1')
 # 分量2
@@ -30,6 +32,8 @@ plt.plot(x, params[1]*np.sin(x), '--', label='sub-func 2')
 plt.plot(x, params[2]*(x-5)**2, '--', label='sub-func 3')
 # 分量4
 plt.plot(x, params[3]*np.ones(nsample), '--', label='sub-func 4')
+plt.plot(x, iv_u, 'r--')
+plt.plot(x, iv_l, 'r--')
 plt.plot(x, 
         params[0]*x +
         params[1]*np.sin(x) +
