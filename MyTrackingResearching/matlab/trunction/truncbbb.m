@@ -1,23 +1,23 @@
 dt = 1;
-radius = 100;
+radius = 500;
 origin = 0;
 %delta = 2*pi/360*2;
-delta = 0.15;
-count = 70;
+delta = 0.05;
+count = 80;
 E0 = radius*radius;
 
 f = @(x,param) [1 param(1) 0 0;0  1 0 0;0  0 1 param(1);0  0 0 1]*x;
 h = @(x, params) [sqrt(x(1,:).^2+x(3,:).^2); atan2(x(3,:),x(1,:))];
 E = @(X) (X(1,:)-origin).^2 + (X(3,:)-origin).^2;
 
-x0 = [origin+radius 0 origin 15]';
+x0 = [origin+radius 0 origin 25]';
 P0 = diag([100 10 100 10]);
 
 Qv = [(dt^3)/3    (dt^2)/2          0           0; 
       (dt^2)/2          dt          0           0;
              0           0   (dt^3)/3    (dt^2)/2;
              0           0   (dt^2)/2          dt]; 
-rw = 25;
+rw = 100;
 Qw = diag([rw 2*pi/180]);
 
 Loop = 100;
@@ -46,8 +46,8 @@ for loop = 1:Loop
 
     for i=1:count
         
-        target_pos_x = origin + cos(i*delta)*radius + randn(1)*.1;
-        target_pos_y = origin + sin(i*delta)*radius + randn(1)*.1;
+        target_pos_x = origin + cos(i*delta)*radius + randn(1)*1;
+        target_pos_y = origin + sin(i*delta)*radius + randn(1)*1;
         target_vec_x = radius*delta*sin(i*delta);
         target_vec_y = radius*delta*cos(i*delta);
         X(:,i) = [target_pos_x; target_vec_x; target_pos_y; target_vec_y];

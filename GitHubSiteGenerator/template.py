@@ -8,11 +8,13 @@ HEADER = \
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css" type="text/css" />
         <link rel="stylesheet" href="/css/bootstrap.min.css" type="text/css" />
         <link rel="stylesheet" href="/css/bootstrap-treeview.min.css" type="text/css" />
+        <link rel="stylesheet" href="/css/github.css">
 
         <script type="text/javascript" src="/js/bootstrap.min.js" ></script>
         <script type="text/javascript" src="/js/jquery-2.1.4.min.js" ></script>
         <script type="text/javascript" src="/js/bootstrap-treeview.min.js" ></script>
         <script type="text/javascript" src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
 
         <nav class="navbar navbar-default">
             <div class="container-header">
@@ -26,12 +28,12 @@ HEADER = \
 BODY = \
 '''
 <body>
-        <div class="page container">
+        <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-3">
                     <div id="tree"></div>
                 </div>
-                <div class="col-sm-8">
+                <div class="col-sm-9">
                    %s 
                 </div>
             </div>
@@ -40,6 +42,8 @@ BODY = \
     <script type="text/javascript" src="/js/content.js" ></script>
     <script type="text/javascript">
     $('#tree').treeview({data: tree, enableLinks: true});
+    $('table').addClass('table table-striped');
     </script>
+    <script>hljs.initHighlightingOnLoad();</script>
 </html>
 '''

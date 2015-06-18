@@ -9,7 +9,7 @@ PIC_BASE="https://raw.githubusercontent.com/maxiee/maxiee.github.io/master"
 OUTPUT = str(p) + '/js/content.js'
 HTML = str(p) + '/static/html/'
 directory_blacklist = ['.git', 'css', 'js', 'static']
-file_blacklist = ['README.md', 'index.html', '.swp', '.directory']
+file_blacklist = ['README.md', 'index.html', '.swp', '.directory', '.png', '.gitignore', '.dia']
 
 def generateContent(p):
     res = []
@@ -32,7 +32,7 @@ def generateContent(p):
                 #file_dict['href'] = str(i)[str(i).find('posts')+len('posts/'):].replace('.mk','').replace("/","-")
                 file_dict['href'] = URL_BASE + str.join(".", i.name.split('.')[:-1]) + '.html'
                 res.append(file_dict)
-    return res
+    return sorted(res, key=lambda k: k['text'])
 
 def isInBlacklist(blacklist, filename):
     for fb in blacklist:
