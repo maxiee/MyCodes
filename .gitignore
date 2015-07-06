@@ -62,3 +62,4 @@ MachineLearningInAction/Chapter2/trainingDigits/
 *.out
 flaskr/venv
 *.swp
+*.class

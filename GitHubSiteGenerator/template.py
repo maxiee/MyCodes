@@ -33,15 +33,27 @@ BODY = \
                 <div class="col-sm-3">
                     <div id="tree"></div>
                 </div>
-                <div class="col-sm-9">
+                <div class="col-sm-9" id="content">
                    %s 
                 </div>
             </div>
         </div>
     </body>
     <script type="text/javascript" src="/js/content.js" ></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" ></script>
     <script type="text/javascript">
-    $('#tree').treeview({data: tree, enableLinks: true});
+    $.cookie.json = true;
+    $('#tree').treeview({
+        data: tree, 
+        enableLinks: true,
+        onNodeSelected: function(event, node) {
+            $.cookie('content', node);
+        }
+    });
+    var content = $.cookie('content')
+    if (content != null) {
+        $('#tree').treeview('toggleNodeSelected', [content]);
+    }
     $('table').addClass('table table-striped');
     </script>
     <script>hljs.initHighlightingOnLoad();</script>

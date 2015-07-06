@@ -4,14 +4,19 @@ import template
 import re
 
 p = Path('/home/maxiee/maxiee.github.io')
+homepage_url = "/home/maxiee/maxiee.github.io/index.html"
 URL_BASE="http://maxiee.github.io/static/html/"
 PIC_BASE="https://raw.githubusercontent.com/maxiee/maxiee.github.io/master"
 OUTPUT = str(p) + '/js/content.js'
 HTML = str(p) + '/static/html/'
 directory_blacklist = ['.git', 'css', 'js', 'static']
 file_blacklist = ['README.md', 'index.html', '.swp', '.directory', '.png', '.gitignore', '.dia']
+content_blacklist = ['resume.md']
+
+total_count = 0
 
 def generateContent(p):
+    global total_count
     res = []
     dfs = p.iterdir()
     for i in dfs:
@@ -27,11 +32,13 @@ def generateContent(p):
             if not isInBlacklist(file_blacklist, i.name):
                 if '.md' in i.name: # .md 静态化
                     generateHtml(i)
-                file_dict = {}
-                file_dict['text'] = i.name
-                #file_dict['href'] = str(i)[str(i).find('posts')+len('posts/'):].replace('.mk','').replace("/","-")
-                file_dict['href'] = URL_BASE + str.join(".", i.name.split('.')[:-1]) + '.html'
-                res.append(file_dict)
+                if not isInBlacklist(content_blacklist, i.name):
+                    file_dict = {}
+                    file_dict['text'] = i.name.replace('.md', '')
+                    #file_dict['href'] = str(i)[str(i).find('posts')+len('posts/'):].replace('.mk','').replace("/","-")
+                    file_dict['href'] = URL_BASE + str.join(".", i.name.split('.')[:-1]) + '.html'
+                    res.append(file_dict)
+                    total_count += 1
     return sorted(res, key=lambda k: k['text'])
 
 def isInBlacklist(blacklist, filename):
@@ -73,9 +80,22 @@ def getPost(url):
     import markdown
     return markdown.markdown(post)
 
+def generateHomepage():
+    header = template.HEADER % '主页'
+    content = '共有笔记 %d 篇.' % total_count
+    body = template.BODY % content
+    homepage_file = open(homepage_url, 'w')
+    homepage_file.write(header + body)
+    homepage_file.close()
+    
+
 if __name__ == "__main__":
+    # 生成笔记网页
     content = generateContent(p)
+    # 生成目录
     f = open(OUTPUT, 'w')
     content = 'var tree = ' + json.dumps(content, ensure_ascii=False)
     f.write(content)
     f.close()
+    # 生成主页
+    generateHomepage()
