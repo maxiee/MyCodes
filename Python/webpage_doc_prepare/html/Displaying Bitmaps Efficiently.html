@@ -1,0 +1,2602 @@
+<h1>Displaying Bitmaps Efficiently</h1>
+<div class="jd-descr" itemprop="articleBody">
+ <div id="tb-wrapper">
+  <div id="tb">
+   <h2>
+    Dependencies and prerequisites
+   </h2>
+   <ul>
+    <li>
+     Android 2.1 (API Level 7) or higher
+    </li>
+    <li>
+     <a href="/tools/support-library/index.html">
+      Support Library
+     </a>
+    </li>
+   </ul>
+   <h2>
+    Try it out
+   </h2>
+   <div class="download-box">
+    <a class="button" href="/downloads/samples/DisplayingBitmaps.zip">
+     Download the sample
+    </a>
+    <p class="filename">
+     DisplayingBitmaps.zip
+    </p>
+   </div>
+  </div>
+ </div>
+ <a class="notice-developers-video wide" href="http://www.youtube.com/watch?v=rsQet4nBVi8">
+  <div>
+   <h3>
+    Video
+   </h3>
+   <p>
+    DevBytes: Bitmap Allocation
+   </p>
+  </div>
+ </a>
+ <a class="notice-developers-video wide" href="http://www.youtube.com/watch?v=pMRnGDR6Cu0">
+  <div>
+   <h3>
+    Video
+   </h3>
+   <p>
+    DevBytes: Making Apps Beautiful - Part 4 - Performance Tuning
+   </p>
+  </div>
+ </a>
+ <p>
+  Learn how to use common techniques to process and load
+  <code>
+   <a href="/reference/android/graphics/Bitmap.html">
+    Bitmap
+   </a>
+  </code>
+  objects in a way that keeps your user interface (UI) components responsive
+and avoids exceeding your application memory limit. If you're not careful, bitmaps can quickly
+consume your available memory budget leading to an application crash due to the dreaded
+exception:
+  <br/>
+  <code>
+   java.lang.OutofMemoryError: bitmap size exceeds VM budget
+  </code>
+  .
+ </p>
+ <p>
+  There are a number of reasons why loading bitmaps in your Android application is tricky:
+ </p>
+ <ul>
+  <li>
+   Mobile devices typically have constrained system resources. Android devices can have as little
+  as 16MB of memory available to a single application. The
+   <a href="http://source.android.com/compatibility/downloads.html">
+    Android Compatibility Definition
+  Document
+   </a>
+   (CDD),
+   <i>
+    Section 3.7. Virtual Machine Compatibility
+   </i>
+   gives the required minimum
+  application memory for various screen sizes and densities. Applications should be optimized to
+  perform under this minimum memory limit. However, keep in mind many devices are configured with
+  higher limits.
+  </li>
+  <li>
+   Bitmaps take up a lot of memory, especially for rich images like photographs. For example, the
+  camera on the
+   <a href="http://www.android.com/devices/detail/galaxy-nexus">
+    Galaxy Nexus
+   </a>
+   takes 
+  photos up to 2592x1936 pixels (5 megapixels). If the bitmap configuration used is
+   <code>
+    <a href="/reference/android/graphics/Bitmap.Config.html">
+     ARGB_8888
+    </a>
+   </code>
+   (the default from the Android 2.3 onward) then loading
+  this image into memory takes about 19MB of memory (2592*1936*4 bytes), immediately exhausting the
+  per-app limit on some devices.
+  </li>
+  <li>
+   Android app UI&rsquo;s frequently require several bitmaps to be loaded at once. Components such as
+   <code>
+    <a href="/reference/android/widget/ListView.html">
+     ListView
+    </a>
+   </code>
+   ,
+   <code>
+    <a href="/reference/android/widget/GridView.html">
+     GridView
+    </a>
+   </code>
+   and
+   <code>
+    <a href="/reference/android/support/v4/view/ViewPager.html">
+     ViewPager
+    </a>
+   </code>
+   commonly include multiple bitmaps on-screen at once with many
+  more potentially off-screen ready to show at the flick of a finger.
+  </li>
+ </ul>
+ <h2>
+  Lessons
+ </h2>
+ <dl>
+  <dt>
+   <b>
+    <a href="load-bitmap.html">
+     Loading Large Bitmaps Efficiently
+    </a>
+   </b>
+  </dt>
+  <dd>
+   This lesson walks you through decoding large bitmaps without exceeding the per application
+    memory limit.
+  </dd>
+  <dt>
+   <b>
+    <a href="process-bitmap.html">
+     Processing Bitmaps Off the UI Thread
+    </a>
+   </b>
+  </dt>
+  <dd>
+   Bitmap processing (resizing, downloading from a remote source, etc.) should never take place
+    on the main UI thread. This lesson walks you through processing bitmaps in a background thread
+    using
+   <code>
+    <a href="/reference/android/os/AsyncTask.html">
+     AsyncTask
+    </a>
+   </code>
+   and explains how to handle concurrency issues.
+  </dd>
+  <dt>
+   <b>
+    <a href="cache-bitmap.html">
+     Caching Bitmaps
+    </a>
+   </b>
+  </dt>
+  <dd>
+   This lesson walks you through using a memory and disk bitmap cache to improve the
+    responsiveness and fluidity of your UI when loading multiple bitmaps.
+  </dd>
+  <dt>
+   <b>
+    <a href="manage-memory.html">
+     Managing Bitmap Memory
+    </a>
+   </b>
+  </dt>
+  <dd>
+   This lesson explains how to manage bitmap memory to maximize your app's performance.
+  </dd>
+  <dt>
+   <b>
+    <a href="display-bitmap.html">
+     Displaying Bitmaps in Your UI
+    </a>
+   </b>
+  </dt>
+  <dd>
+   This lesson brings everything together, showing you how to load multiple bitmaps into
+    components like
+   <code>
+    <a href="/reference/android/support/v4/view/ViewPager.html">
+     ViewPager
+    </a>
+   </code>
+   and
+   <code>
+    <a href="/reference/android/widget/GridView.html">
+     GridView
+    </a>
+   </code>
+   using a background thread and bitmap cache.
+  </dd>
+ </dl>
+</div>
+<h1>Loading Large Bitmaps Efficiently</h1>
+<div class="jd-descr" itemprop="articleBody">
+ <div id="tb-wrapper">
+  <div id="tb">
+   <h2>
+    This lesson teaches you to
+   </h2>
+   <ol>
+    <li>
+     <a href="#read-bitmap">
+      Read Bitmap Dimensions and Type
+     </a>
+    </li>
+    <li>
+     <a href="#load-bitmap">
+      Load a Scaled Down Version into Memory
+     </a>
+    </li>
+   </ol>
+   <h2>
+    Try it out
+   </h2>
+   <div class="download-box">
+    <a class="button" href="/downloads/samples/DisplayingBitmaps.zip">
+     Download the sample
+    </a>
+    <p class="filename">
+     DisplayingBitmaps.zip
+    </p>
+   </div>
+  </div>
+ </div>
+ <p>
+  Images come in all shapes and sizes. In many cases they are larger than required for a typical
+application user interface (UI). For example, the system Gallery application displays photos taken
+using your Android devices's camera which are typically much higher resolution than the screen
+density of your device.
+ </p>
+ <p>
+  Given that you are working with limited memory, ideally you only want to load a lower resolution
+version in memory. The lower resolution version should match the size of the UI component that
+displays it. An image with a higher resolution does not provide any visible benefit, but still takes
+up precious memory and incurs additional performance overhead due to additional on the fly
+scaling.
+ </p>
+ <p>
+  This lesson walks you through decoding large bitmaps without exceeding the per application
+memory limit by loading a smaller subsampled version in memory.
+ </p>
+ <h2 id="read-bitmap">
+  Read Bitmap Dimensions and Type
+ </h2>
+ <p>
+  The
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.html">
+    BitmapFactory
+   </a>
+  </code>
+  class provides several decoding methods (
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.html#decodeByteArray(byte[], int, int, android.graphics.BitmapFactory.Options)">
+    decodeByteArray()
+   </a>
+  </code>
+  ,
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.html#decodeFile(java.lang.String, android.graphics.BitmapFactory.Options)">
+    decodeFile()
+   </a>
+  </code>
+  ,
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.html#decodeResource(android.content.res.Resources, int, android.graphics.BitmapFactory.Options)">
+    decodeResource()
+   </a>
+  </code>
+  , etc.) for creating a
+  <code>
+   <a href="/reference/android/graphics/Bitmap.html">
+    Bitmap
+   </a>
+  </code>
+  from various sources. Choose
+the most appropriate decode method based on your image data source. These methods attempt to
+allocate memory for the constructed bitmap and therefore can easily result in an
+  <code>
+   OutOfMemory
+  </code>
+  exception. Each type of decode method has additional signatures that let you specify decoding
+options via the
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html">
+    BitmapFactory.Options
+   </a>
+  </code>
+  class. Setting the
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#inJustDecodeBounds">
+    inJustDecodeBounds
+   </a>
+  </code>
+  property to
+  <code>
+   true
+  </code>
+  while decoding
+avoids memory allocation, returning
+  <code>
+   null
+  </code>
+  for the bitmap object but setting
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#outWidth">
+    outWidth
+   </a>
+  </code>
+  ,
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#outHeight">
+    outHeight
+   </a>
+  </code>
+  and
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#outMimeType">
+    outMimeType
+   </a>
+  </code>
+  . This technique allows you to read the
+dimensions and type of the image data prior to construction (and memory allocation) of the
+bitmap.
+ </p>
+ <pre>
+BitmapFactory.Options options = new BitmapFactory.Options();
+options.inJustDecodeBounds = true;
+BitmapFactory.decodeResource(getResources(), R.id.myimage, options);
+int imageHeight = options.outHeight;
+int imageWidth = options.outWidth;
+String imageType = options.outMimeType;
+</pre>
+ <p>
+  To avoid
+  <code>
+   java.lang.OutOfMemory
+  </code>
+  exceptions, check the dimensions of a bitmap before
+decoding it, unless you absolutely trust the source to provide you with predictably sized image data
+that comfortably fits within the available memory.
+ </p>
+ <h2 id="load-bitmap">
+  Load a Scaled Down Version into Memory
+ </h2>
+ <p>
+  Now that the image dimensions are known, they can be used to decide if the full image should be
+loaded into memory or if a subsampled version should be loaded instead. Here are some factors to
+consider:
+ </p>
+ <ul>
+  <li>
+   Estimated memory usage of loading the full image in memory.
+  </li>
+  <li>
+   Amount of memory you are willing to commit to loading this image given any other memory
+  requirements of your application.
+  </li>
+  <li>
+   Dimensions of the target
+   <code>
+    <a href="/reference/android/widget/ImageView.html">
+     ImageView
+    </a>
+   </code>
+   or UI component that the image
+  is to be loaded into.
+  </li>
+  <li>
+   Screen size and density of the current device.
+  </li>
+ </ul>
+ <p>
+  For example, it&rsquo;s not worth loading a 1024x768 pixel image into memory if it will eventually be
+displayed in a 128x96 pixel thumbnail in an
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  .
+ </p>
+ <p>
+  To tell the decoder to subsample the image, loading a smaller version into memory, set
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#inSampleSize">
+    inSampleSize
+   </a>
+  </code>
+  to
+  <code>
+   true
+  </code>
+  in your
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html">
+    BitmapFactory.Options
+   </a>
+  </code>
+  object. For example, an image with resolution 2048x1536 that
+is decoded with an
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#inSampleSize">
+    inSampleSize
+   </a>
+  </code>
+  of 4 produces a
+bitmap of approximately 512x384. Loading this into memory uses 0.75MB rather than 12MB for the full
+image (assuming a bitmap configuration of
+  <code>
+   <a href="/reference/android/graphics/Bitmap.Config.html">
+    ARGB_8888
+   </a>
+  </code>
+  ). Here&rsquo;s
+a method to calculate a sample size value that is a power of two based on a target width and
+height:
+ </p>
+ <pre>
+public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+    // Raw height and width of image
+    final int height = options.outHeight;
+    final int width = options.outWidth;
+    int inSampleSize = 1;
+
+    if (height &gt; reqHeight || width &gt; reqWidth) {
+
+        final int halfHeight = height / 2;
+        final int halfWidth = width / 2;
+
+        // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+        // height and width larger than the requested height and width.
+        while ((halfHeight / inSampleSize) &gt; reqHeight
+                &amp;&amp; (halfWidth / inSampleSize) &gt; reqWidth) {
+            inSampleSize *= 2;
+        }
+    }
+
+    return inSampleSize;
+}
+</pre>
+ <p class="note">
+  <strong>
+   Note:
+  </strong>
+  A power of two value is calculated because the decoder uses
+a final value by rounding down to the nearest power of two, as per the
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#inSampleSize">
+    inSampleSize
+   </a>
+  </code>
+  documentation.
+ </p>
+ <p>
+  To use this method, first decode with
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#inJustDecodeBounds">
+    inJustDecodeBounds
+   </a>
+  </code>
+  set to
+  <code>
+   true
+  </code>
+  , pass the options
+through and then decode again using the new
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#inSampleSize">
+    inSampleSize
+   </a>
+  </code>
+  value and
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.Options.html#inJustDecodeBounds">
+    inJustDecodeBounds
+   </a>
+  </code>
+  set to
+  <code>
+   false
+  </code>
+  :
+ </p>
+ <a name="decodeSampledBitmapFromResource">
+ </a>
+ <pre>
+public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
+        int reqWidth, int reqHeight) {
+
+    // First decode with inJustDecodeBounds=true to check dimensions
+    final BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inJustDecodeBounds = true;
+    BitmapFactory.decodeResource(res, resId, options);
+
+    // Calculate inSampleSize
+    options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+    // Decode bitmap with inSampleSize set
+    options.inJustDecodeBounds = false;
+    return BitmapFactory.decodeResource(res, resId, options);
+}
+</pre>
+ <p>
+  This method makes it easy to load a bitmap of arbitrarily large size into an
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  that displays a 100x100 pixel thumbnail, as shown in the following example
+code:
+ </p>
+ <pre>
+mImageView.setImageBitmap(
+    decodeSampledBitmapFromResource(getResources(), R.id.myimage, 100, 100));
+</pre>
+ <p>
+  You can follow a similar process to decode bitmaps from other sources, by substituting the
+appropriate
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.html#decodeByteArray(byte[], int, int, android.graphics.BitmapFactory.Options)">
+    BitmapFactory.decode*
+   </a>
+  </code>
+  method as needed.
+ </p>
+</div>
+<h1>Processing Bitmaps Off the UI Thread</h1>
+<div class="jd-descr" itemprop="articleBody">
+ <div id="tb-wrapper">
+  <div id="tb">
+   <h2>
+    This lesson teaches you to
+   </h2>
+   <ol>
+    <li>
+     <a href="#async-task">
+      Use an AsyncTask
+     </a>
+    </li>
+    <li>
+     <a href="#concurrency">
+      Handle Concurrency
+     </a>
+    </li>
+   </ol>
+   <h2>
+    You should also read
+   </h2>
+   <ul>
+    <li>
+     <a href="/guide/practices/responsiveness.html">
+      Designing for Responsiveness
+     </a>
+    </li>
+    <li>
+     <a href="http://android-developers.blogspot.com/2010/07/multithreading-for-performance.html">
+      Multithreading
+  for Performance
+     </a>
+    </li>
+   </ul>
+   <h2>
+    Try it out
+   </h2>
+   <div class="download-box">
+    <a class="button" href="/downloads/samples/DisplayingBitmaps.zip">
+     Download the sample
+    </a>
+    <p class="filename">
+     DisplayingBitmaps.zip
+    </p>
+   </div>
+  </div>
+ </div>
+ <p>
+  The
+  <code>
+   <a href="/reference/android/graphics/BitmapFactory.html#decodeByteArray(byte[], int, int, android.graphics.BitmapFactory.Options)">
+    BitmapFactory.decode*
+   </a>
+  </code>
+  methods, discussed in the
+  <a href="load-bitmap.html">
+   Load Large Bitmaps
+Efficiently
+  </a>
+  lesson, should not be executed on the main UI thread if the source data is read from
+disk or a network location (or really any source other than memory). The time this data takes to
+load is unpredictable and depends on a variety of factors (speed of reading from disk or network,
+size of image, power of CPU, etc.). If one of these tasks blocks the UI thread, the system flags
+your application as non-responsive and the user has the option of closing it (see
+  <a href="/guide/practices/responsiveness.html">
+   Designing for Responsiveness
+  </a>
+  for
+more information).
+ </p>
+ <p>
+  This lesson walks you through processing bitmaps in a background thread using
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  and shows you how to handle concurrency issues.
+ </p>
+ <h2 id="async-task">
+  Use an AsyncTask
+ </h2>
+ <p>
+  The
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  class provides an easy way to execute some work in a background
+thread and publish the results back on the UI thread. To use it, create a subclass and override the
+provided methods. Here&rsquo;s an example of loading a large image into an
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  using
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  and
+  <a href="load-bitmap.html#decodeSampledBitmapFromResource">
+   <code>
+    decodeSampledBitmapFromResource()
+   </code>
+  </a>
+  :
+ </p>
+ <a name="BitmapWorkerTask">
+ </a>
+ <pre>
+class BitmapWorkerTask extends AsyncTask&lt;Integer, Void, Bitmap&gt; {
+    private final WeakReference&lt;ImageView&gt; imageViewReference;
+    private int data = 0;
+
+    public BitmapWorkerTask(ImageView imageView) {
+        // Use a WeakReference to ensure the ImageView can be garbage collected
+        imageViewReference = new WeakReference&lt;ImageView&gt;(imageView);
+    }
+
+    // Decode image in background.
+    @Override
+    protected Bitmap doInBackground(Integer... params) {
+        data = params[0];
+        return decodeSampledBitmapFromResource(getResources(), data, 100, 100));
+    }
+
+    // Once complete, see if ImageView is still around and set bitmap.
+    @Override
+    protected void onPostExecute(Bitmap bitmap) {
+        if (imageViewReference != null &amp;&amp; bitmap != null) {
+            final ImageView imageView = imageViewReference.get();
+            if (imageView != null) {
+                imageView.setImageBitmap(bitmap);
+            }
+        }
+    }
+}
+</pre>
+ <p>
+  The
+  <code>
+   <a href="/reference/java/lang/ref/WeakReference.html">
+    WeakReference
+   </a>
+  </code>
+  to the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  ensures that the
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  does not prevent the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  and anything it
+references from being garbage collected. There&rsquo;s no guarantee the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  is still around when the task finishes, so you must also check the reference in
+  <code>
+   <a href="/reference/android/os/AsyncTask.html#onPostExecute(Result)">
+    onPostExecute()
+   </a>
+  </code>
+  . The
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  may no longer exist, if for example, the user navigates away from the activity or if a
+configuration change happens before the task finishes.
+ </p>
+ <p>
+  To start loading the bitmap asynchronously, simply create a new task and execute it:
+ </p>
+ <pre>
+public void loadBitmap(int resId, ImageView imageView) {
+    BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+    task.execute(resId);
+}
+</pre>
+ <h2 id="concurrency">
+  Handle Concurrency
+ </h2>
+ <p>
+  Common view components such as
+  <code>
+   <a href="/reference/android/widget/ListView.html">
+    ListView
+   </a>
+  </code>
+  and
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  introduce another issue when used in conjunction with the
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  as demonstrated in the previous section. In order to be efficient with memory,
+these components recycle child views as the user scrolls. If each child view triggers an
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  , there is no guarantee that when it completes, the associated view has not
+already been recycled for use in another child view. Furthermore, there is no guarantee that the
+order in which asynchronous tasks are started is the order that they complete.
+ </p>
+ <p>
+  The blog post
+  <a href="http://android-developers.blogspot.com/2010/07/multithreading-for-performance.html">
+   Multithreading
+for Performance
+  </a>
+  further discusses dealing with concurrency, and offers a solution where the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  stores a reference to the most recent
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  which can later be checked when the task completes. Using a similar method, the
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  from the previous section can be extended to follow a similar pattern.
+ </p>
+ <p>
+  Create a dedicated
+  <code>
+   <a href="/reference/android/graphics/drawable/Drawable.html">
+    Drawable
+   </a>
+  </code>
+  subclass to store a reference
+back to the worker task. In this case, a
+  <code>
+   <a href="/reference/android/graphics/drawable/BitmapDrawable.html">
+    BitmapDrawable
+   </a>
+  </code>
+  is used so
+that a placeholder image can be displayed in the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  while the task
+completes:
+ </p>
+ <a name="AsyncDrawable">
+ </a>
+ <pre>
+static class AsyncDrawable extends BitmapDrawable {
+    private final WeakReference&lt;BitmapWorkerTask&gt; bitmapWorkerTaskReference;
+
+    public AsyncDrawable(Resources res, Bitmap bitmap,
+            BitmapWorkerTask bitmapWorkerTask) {
+        super(res, bitmap);
+        bitmapWorkerTaskReference =
+            new WeakReference&lt;BitmapWorkerTask&gt;(bitmapWorkerTask);
+    }
+
+    public BitmapWorkerTask getBitmapWorkerTask() {
+        return bitmapWorkerTaskReference.get();
+    }
+}
+</pre>
+ <p>
+  Before executing the
+  <a href="#BitmapWorkerTask">
+   <code>
+    BitmapWorkerTask
+   </code>
+  </a>
+  , you create an
+  <a href="#AsyncDrawable">
+   <code>
+    AsyncDrawable
+   </code>
+  </a>
+  and bind it to the target
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  :
+ </p>
+ <pre>
+public void loadBitmap(int resId, ImageView imageView) {
+    if (cancelPotentialWork(resId, imageView)) {
+        final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+        final AsyncDrawable asyncDrawable =
+                new AsyncDrawable(getResources(), mPlaceHolderBitmap, task);
+        imageView.setImageDrawable(asyncDrawable);
+        task.execute(resId);
+    }
+}
+</pre>
+ <p>
+  The
+  <code>
+   cancelPotentialWork
+  </code>
+  method referenced in the code sample above checks if another
+running task is already associated with the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  . If so, it attempts to
+cancel the previous task by calling
+  <code>
+   <a href="/reference/android/os/AsyncTask.html#cancel(boolean)">
+    cancel()
+   </a>
+  </code>
+  . In a small number
+of cases, the new task data matches the existing task and nothing further needs to happen. Here is
+the implementation of
+  <code>
+   cancelPotentialWork
+  </code>
+  :
+ </p>
+ <pre>
+public static boolean cancelPotentialWork(int data, ImageView imageView) {
+    final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
+
+    if (bitmapWorkerTask != null) {
+        final int bitmapData = bitmapWorkerTask.data;
+        // If bitmapData is not yet set or it differs from the new data
+        if (bitmapData == 0 || bitmapData != data) {
+            // Cancel previous task
+            bitmapWorkerTask.cancel(true);
+        } else {
+            // The same work is already in progress
+            return false;
+        }
+    }
+    // No task associated with the ImageView, or an existing task was cancelled
+    return true;
+}
+</pre>
+ <p>
+  A helper method,
+  <code>
+   getBitmapWorkerTask()
+  </code>
+  , is used above to retrieve the task associated
+with a particular
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  :
+ </p>
+ <pre>
+private static BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
+   if (imageView != null) {
+       final Drawable drawable = imageView.getDrawable();
+       if (drawable instanceof AsyncDrawable) {
+           final AsyncDrawable asyncDrawable = (AsyncDrawable) drawable;
+           return asyncDrawable.getBitmapWorkerTask();
+       }
+    }
+    return null;
+}
+</pre>
+ <p>
+  The last step is updating
+  <code>
+   onPostExecute()
+  </code>
+  in
+  <a href="#BitmapWorkerTask">
+   <code>
+    BitmapWorkerTask
+   </code>
+  </a>
+  so that it checks if the task is cancelled and if the current task matches the
+one associated with the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  :
+ </p>
+ <a name="BitmapWorkerTaskUpdated">
+ </a>
+ <pre>
+class BitmapWorkerTask extends AsyncTask&lt;Integer, Void, Bitmap&gt; {
+    ...
+
+    @Override
+    protected void onPostExecute(Bitmap bitmap) {
+        <strong>if (isCancelled()) {
+            bitmap = null;
+        }</strong>
+
+        if (imageViewReference != null &amp;&amp; bitmap != null) {
+            final ImageView imageView = imageViewReference.get();
+            <strong>final BitmapWorkerTask bitmapWorkerTask =
+                    getBitmapWorkerTask(imageView);</strong>
+            if (<strong>this == bitmapWorkerTask &amp;&amp;</strong> imageView != null) {
+                imageView.setImageBitmap(bitmap);
+            }
+        }
+    }
+}
+</pre>
+ <p>
+  This implementation is now suitable for use in
+  <code>
+   <a href="/reference/android/widget/ListView.html">
+    ListView
+   </a>
+  </code>
+  and
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  components as well as any other components that recycle their child
+views. Simply call
+  <code>
+   loadBitmap
+  </code>
+  where you normally set an image to your
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  . For example, in a
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  implementation this
+would be in the
+  <code>
+   <a href="/reference/android/widget/Adapter.html#getView(int, android.view.View, android.view.ViewGroup)">
+    getView()
+   </a>
+  </code>
+  method of the backing adapter.
+ </p>
+</div>
+<h1>Caching Bitmaps</h1>
+<div class="jd-descr" itemprop="articleBody">
+ <div id="tb-wrapper">
+  <div id="tb">
+   <h2>
+    This lesson teaches you to
+   </h2>
+   <ol>
+    <li>
+     <a href="#memory-cache">
+      Use a Memory Cache
+     </a>
+    </li>
+    <li>
+     <a href="#disk-cache">
+      Use a Disk Cache
+     </a>
+    </li>
+    <li>
+     <a href="#config-changes">
+      Handle Configuration Changes
+     </a>
+    </li>
+   </ol>
+   <h2>
+    You should also read
+   </h2>
+   <ul>
+    <li>
+     <a href="/guide/topics/resources/runtime-changes.html">
+      Handling Runtime Changes
+     </a>
+    </li>
+   </ul>
+   <h2>
+    Try it out
+   </h2>
+   <div class="download-box">
+    <a class="button" href="/downloads/samples/DisplayingBitmaps.zip">
+     Download the sample
+    </a>
+    <p class="filename">
+     DisplayingBitmaps.zip
+    </p>
+   </div>
+  </div>
+ </div>
+ <p>
+  Loading a single bitmap into your user interface (UI) is straightforward, however things get more
+complicated if you need to load a larger set of images at once. In many cases (such as with
+components like
+  <code>
+   <a href="/reference/android/widget/ListView.html">
+    ListView
+   </a>
+  </code>
+  ,
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  or
+  <code>
+   <a href="/reference/android/support/v4/view/ViewPager.html">
+    ViewPager
+   </a>
+  </code>
+  ), the total number of images on-screen combined with images that
+might soon scroll onto the screen are essentially unlimited.
+ </p>
+ <p>
+  Memory usage is kept down with components like this by recycling the child views as they move
+off-screen. The garbage collector also frees up your loaded bitmaps, assuming you don't keep any
+long lived references. This is all good and well, but in order to keep a fluid and fast-loading UI
+you want to avoid continually processing these images each time they come back on-screen. A memory
+and disk cache can often help here, allowing components to quickly reload processed images.
+ </p>
+ <p>
+  This lesson walks you through using a memory and disk bitmap cache to improve the responsiveness
+and fluidity of your UI when loading multiple bitmaps.
+ </p>
+ <h2 id="memory-cache">
+  Use a Memory Cache
+ </h2>
+ <p>
+  A memory cache offers fast access to bitmaps at the cost of taking up valuable application
+memory. The
+  <code>
+   <a href="/reference/android/util/LruCache.html">
+    LruCache
+   </a>
+  </code>
+  class (also available in the
+  <a href="/reference/android/support/v4/util/LruCache.html">
+   Support Library
+  </a>
+  for use back
+to API Level 4) is particularly well suited to the task of caching bitmaps, keeping recently
+referenced objects in a strong referenced
+  <code>
+   <a href="/reference/java/util/LinkedHashMap.html">
+    LinkedHashMap
+   </a>
+  </code>
+  and evicting the least
+recently used member before the cache exceeds its designated size.
+ </p>
+ <p class="note">
+  <strong>
+   Note:
+  </strong>
+  In the past, a popular memory cache implementation was a
+  <code>
+   <a href="/reference/java/lang/ref/SoftReference.html">
+    SoftReference
+   </a>
+  </code>
+  or
+  <code>
+   <a href="/reference/java/lang/ref/WeakReference.html">
+    WeakReference
+   </a>
+  </code>
+  bitmap cache, however
+this is not recommended. Starting from Android 2.3 (API Level 9) the garbage collector is more
+aggressive with collecting soft/weak references which makes them fairly ineffective. In addition,
+prior to Android 3.0 (API Level 11), the backing data of a bitmap was stored in native memory which
+is not released in a predictable manner, potentially causing an application to briefly exceed its
+memory limits and crash.
+ </p>
+ <p>
+  In order to choose a suitable size for a
+  <code>
+   <a href="/reference/android/util/LruCache.html">
+    LruCache
+   </a>
+  </code>
+  , a number of factors
+should be taken into consideration, for example:
+ </p>
+ <ul>
+  <li>
+   How memory intensive is the rest of your activity and/or application?
+  </li>
+  <li>
+   How many images will be on-screen at once? How many need to be available ready to come
+  on-screen?
+  </li>
+  <li>
+   What is the screen size and density of the device? An extra high density screen (xhdpi) device
+  like
+   <a href="http://www.android.com/devices/detail/galaxy-nexus">
+    Galaxy Nexus
+   </a>
+   will need a
+  larger cache to hold the same number of images in memory compared to a device like
+   <a href="http://www.android.com/devices/detail/nexus-s">
+    Nexus S
+   </a>
+   (hdpi).
+  </li>
+  <li>
+   What dimensions and configuration are the bitmaps and therefore how much memory will each take
+  up?
+  </li>
+  <li>
+   How frequently will the images be accessed? Will some be accessed more frequently than others?
+  If so, perhaps you may want to keep certain items always in memory or even have multiple
+   <code>
+    <a href="/reference/android/util/LruCache.html">
+     LruCache
+    </a>
+   </code>
+   objects for different groups of bitmaps.
+  </li>
+  <li>
+   Can you balance quality against quantity? Sometimes it can be more useful to store a larger
+  number of lower quality bitmaps, potentially loading a higher quality version in another
+  background task.
+  </li>
+ </ul>
+ <p>
+  There is no specific size or formula that suits all applications, it's up to you to analyze your
+usage and come up with a suitable solution. A cache that is too small causes additional overhead with
+no benefit, a cache that is too large can once again cause
+  <code>
+   java.lang.OutOfMemory
+  </code>
+  exceptions
+and leave the rest of your app little memory to work with.
+ </p>
+ <p>
+  Here&rsquo;s an example of setting up a
+  <code>
+   <a href="/reference/android/util/LruCache.html">
+    LruCache
+   </a>
+  </code>
+  for bitmaps:
+ </p>
+ <pre>
+private LruCache&lt;String, Bitmap&gt; mMemoryCache;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    ...
+    // Get max available VM memory, exceeding this amount will throw an
+    // OutOfMemory exception. Stored in kilobytes as LruCache takes an
+    // int in its constructor.
+    final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+    // Use 1/8th of the available memory for this memory cache.
+    final int cacheSize = maxMemory / 8;
+
+    mMemoryCache = new LruCache&lt;String, Bitmap&gt;(cacheSize) {
+        @Override
+        protected int sizeOf(String key, Bitmap bitmap) {
+            // The cache size will be measured in kilobytes rather than
+            // number of items.
+            return bitmap.getByteCount() / 1024;
+        }
+    };
+    ...
+}
+
+public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+    if (getBitmapFromMemCache(key) == null) {
+        mMemoryCache.put(key, bitmap);
+    }
+}
+
+public Bitmap getBitmapFromMemCache(String key) {
+    return mMemoryCache.get(key);
+}
+</pre>
+ <p class="note">
+  <strong>
+   Note:
+  </strong>
+  In this example, one eighth of the application memory is
+allocated for our cache. On a normal/hdpi device this is a minimum of around 4MB (32/8). A full
+screen
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  filled with images on a device with 800x480 resolution would
+use around 1.5MB (800*480*4 bytes), so this would cache a minimum of around 2.5 pages of images in
+memory.
+ </p>
+ <p>
+  When loading a bitmap into an
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  , the
+  <code>
+   <a href="/reference/android/util/LruCache.html">
+    LruCache
+   </a>
+  </code>
+  is checked first. If an entry is found, it is used immediately to update the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  , otherwise a background thread is spawned to process the image:
+ </p>
+ <pre>
+public void loadBitmap(int resId, ImageView imageView) {
+    final String imageKey = String.valueOf(resId);
+
+    final Bitmap bitmap = getBitmapFromMemCache(imageKey);
+    if (bitmap != null) {
+        mImageView.setImageBitmap(bitmap);
+    } else {
+        mImageView.setImageResource(R.drawable.image_placeholder);
+        BitmapWorkerTask task = new BitmapWorkerTask(mImageView);
+        task.execute(resId);
+    }
+}
+</pre>
+ <p>
+  The
+  <a href="process-bitmap.html#BitmapWorkerTask">
+   <code>
+    BitmapWorkerTask
+   </code>
+  </a>
+  also needs to be
+updated to add entries to the memory cache:
+ </p>
+ <pre>
+class BitmapWorkerTask extends AsyncTask&lt;Integer, Void, Bitmap&gt; {
+    ...
+    // Decode image in background.
+    @Override
+    protected Bitmap doInBackground(Integer... params) {
+        final Bitmap bitmap = decodeSampledBitmapFromResource(
+                getResources(), params[0], 100, 100));
+        addBitmapToMemoryCache(String.valueOf(params[0]), bitmap);
+        return bitmap;
+    }
+    ...
+}
+</pre>
+ <h2 id="disk-cache">
+  Use a Disk Cache
+ </h2>
+ <p>
+  A memory cache is useful in speeding up access to recently viewed bitmaps, however you cannot
+rely on images being available in this cache. Components like
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  with
+larger datasets can easily fill up a memory cache. Your application could be interrupted by another
+task like a phone call, and while in the background it might be killed and the memory cache
+destroyed. Once the user resumes, your application has to process each image again.
+ </p>
+ <p>
+  A disk cache can be used in these cases to persist processed bitmaps and help decrease loading
+times where images are no longer available in a memory cache. Of course, fetching images from disk
+is slower than loading from memory and should be done in a background thread, as disk read times can
+be unpredictable.
+ </p>
+ <p class="note">
+  <strong>
+   Note:
+  </strong>
+  A
+  <code>
+   <a href="/reference/android/content/ContentProvider.html">
+    ContentProvider
+   </a>
+  </code>
+  might be a more
+appropriate place to store cached images if they are accessed more frequently, for example in an
+image gallery application.
+ </p>
+ <p>
+  The sample code of this class uses a
+  <code>
+   DiskLruCache
+  </code>
+  implementation that is pulled from the
+  <a href="https://android.googlesource.com/platform/libcore/+/jb-mr2-release/luni/src/main/java/libcore/io/DiskLruCache.java">
+   Android source
+  </a>
+  .
+Here&rsquo;s updated example code that adds a disk cache in addition to the existing memory cache:
+ </p>
+ <pre>
+private DiskLruCache mDiskLruCache;
+private final Object mDiskCacheLock = new Object();
+private boolean mDiskCacheStarting = true;
+private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
+private static final String DISK_CACHE_SUBDIR = "thumbnails";
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    ...
+    // Initialize memory cache
+    ...
+    // Initialize disk cache on background thread
+    File cacheDir = getDiskCacheDir(this, DISK_CACHE_SUBDIR);
+    new InitDiskCacheTask().execute(cacheDir);
+    ...
+}
+
+class InitDiskCacheTask extends AsyncTask&lt;File, Void, Void&gt; {
+    @Override
+    protected Void doInBackground(File... params) {
+        synchronized (mDiskCacheLock) {
+            File cacheDir = params[0];
+            mDiskLruCache = DiskLruCache.open(cacheDir, DISK_CACHE_SIZE);
+            mDiskCacheStarting = false; // Finished initialization
+            mDiskCacheLock.notifyAll(); // Wake any waiting threads
+        }
+        return null;
+    }
+}
+
+class BitmapWorkerTask extends AsyncTask&lt;Integer, Void, Bitmap&gt; {
+    ...
+    // Decode image in background.
+    @Override
+    protected Bitmap doInBackground(Integer... params) {
+        final String imageKey = String.valueOf(params[0]);
+
+        // Check disk cache in background thread
+        Bitmap bitmap = getBitmapFromDiskCache(imageKey);
+
+        if (bitmap == null) { // Not found in disk cache
+            // Process as normal
+            final Bitmap bitmap = decodeSampledBitmapFromResource(
+                    getResources(), params[0], 100, 100));
+        }
+
+        // Add final bitmap to caches
+        addBitmapToCache(imageKey, bitmap);
+
+        return bitmap;
+    }
+    ...
+}
+
+public void addBitmapToCache(String key, Bitmap bitmap) {
+    // Add to memory cache as before
+    if (getBitmapFromMemCache(key) == null) {
+        mMemoryCache.put(key, bitmap);
+    }
+
+    // Also add to disk cache
+    synchronized (mDiskCacheLock) {
+        if (mDiskLruCache != null &amp;&amp; mDiskLruCache.get(key) == null) {
+            mDiskLruCache.put(key, bitmap);
+        }
+    }
+}
+
+public Bitmap getBitmapFromDiskCache(String key) {
+    synchronized (mDiskCacheLock) {
+        // Wait while disk cache is started from background thread
+        while (mDiskCacheStarting) {
+            try {
+                mDiskCacheLock.wait();
+            } catch (InterruptedException e) {}
+        }
+        if (mDiskLruCache != null) {
+            return mDiskLruCache.get(key);
+        }
+    }
+    return null;
+}
+
+// Creates a unique subdirectory of the designated app cache directory. Tries to use external
+// but if not mounted, falls back on internal storage.
+public static File getDiskCacheDir(Context context, String uniqueName) {
+    // Check if media is mounted or storage is built-in, if so, try and use external cache dir
+    // otherwise use internal cache dir
+    final String cachePath =
+            Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
+                    !isExternalStorageRemovable() ? getExternalCacheDir(context).getPath() :
+                            context.getCacheDir().getPath();
+
+    return new File(cachePath + File.separator + uniqueName);
+}
+</pre>
+ <p class="note">
+  <strong>
+   Note:
+  </strong>
+  Even initializing the disk cache requires disk operations
+and therefore should not take place on the main thread. However, this does mean there's a chance
+the cache is accessed before initialization. To address this, in the above implementation, a lock
+object ensures that the app does not read from the disk cache until the cache has been
+initialized.
+ </p>
+ <p>
+  While the memory cache is checked in the UI thread, the disk cache is checked in the background
+thread. Disk operations should never take place on the UI thread. When image processing is
+complete, the final bitmap is added to both the memory and disk cache for future use.
+ </p>
+ <h2 id="config-changes">
+  Handle Configuration Changes
+ </h2>
+ <p>
+  Runtime configuration changes, such as a screen orientation change, cause Android to destroy and
+restart the running activity with the new configuration (For more information about this behavior,
+see
+  <a href="/guide/topics/resources/runtime-changes.html">
+   Handling Runtime Changes
+  </a>
+  ).
+You want to avoid having to process all your images again so the user has a smooth and fast
+experience when a configuration change occurs.
+ </p>
+ <p>
+  Luckily, you have a nice memory cache of bitmaps that you built in the
+  <a href="#memory-cache">
+   Use a Memory Cache
+  </a>
+  section. This cache can be passed through to the new
+activity instance using a
+  <code>
+   <a href="/reference/android/app/Fragment.html">
+    Fragment
+   </a>
+  </code>
+  which is preserved by calling
+  <code>
+   <a href="/reference/android/app/Fragment.html#setRetainInstance(boolean)">
+    setRetainInstance(true)
+   </a>
+  </code>
+  ). After the activity has been
+recreated, this retained
+  <code>
+   <a href="/reference/android/app/Fragment.html">
+    Fragment
+   </a>
+  </code>
+  is reattached and you gain access to the
+existing cache object, allowing images to be quickly fetched and re-populated into the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  objects.
+ </p>
+ <p>
+  Here&rsquo;s an example of retaining a
+  <code>
+   <a href="/reference/android/util/LruCache.html">
+    LruCache
+   </a>
+  </code>
+  object across configuration
+changes using a
+  <code>
+   <a href="/reference/android/app/Fragment.html">
+    Fragment
+   </a>
+  </code>
+  :
+ </p>
+ <pre>
+private LruCache&lt;String, Bitmap&gt; mMemoryCache;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    ...
+    RetainFragment retainFragment =
+            RetainFragment.findOrCreateRetainFragment(getFragmentManager());
+    mMemoryCache = retainFragment.mRetainedCache;
+    if (mMemoryCache == null) {
+        mMemoryCache = new LruCache&lt;String, Bitmap&gt;(cacheSize) {
+            ... // Initialize cache here as usual
+        }
+        retainFragment.mRetainedCache = mMemoryCache;
+    }
+    ...
+}
+
+class RetainFragment extends Fragment {
+    private static final String TAG = "RetainFragment";
+    public LruCache&lt;String, Bitmap&gt; mRetainedCache;
+
+    public RetainFragment() {}
+
+    public static RetainFragment findOrCreateRetainFragment(FragmentManager fm) {
+        RetainFragment fragment = (RetainFragment) fm.findFragmentByTag(TAG);
+        if (fragment == null) {
+            fragment = new RetainFragment();
+            fm.beginTransaction().add(fragment, TAG).commit();
+        }
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        <strong>setRetainInstance(true);</strong>
+    }
+}
+</pre>
+ <p>
+  To test this out, try rotating a device both with and without retaining the
+  <code>
+   <a href="/reference/android/app/Fragment.html">
+    Fragment
+   </a>
+  </code>
+  . You should notice little to no lag as the images populate the activity almost
+instantly from memory when you retain the cache. Any images not found in the memory cache are
+hopefully available in the disk cache, if not, they are processed as usual.
+ </p>
+</div>
+<h1>Managing Bitmap Memory</h1>
+<div class="jd-descr" itemprop="articleBody">
+ <div id="tb-wrapper">
+  <div id="tb">
+   <h2>
+    This lesson teaches you to
+   </h2>
+   <ol>
+    <li>
+     <a href="#recycle">
+      Manage Memory on Android 2.3.3 and Lower
+     </a>
+    </li>
+    <li>
+     <a href="#inBitmap">
+      Manage Memory on Android 3.0 and Higher
+     </a>
+    </li>
+   </ol>
+   <h2>
+    You should also read
+   </h2>
+   <ul>
+    <li>
+     <a href="http://android-developers.blogspot.com/2011/03/memory-analysis-for-android.html">
+      Memory Analysis for Android Applications
+     </a>
+     blog post
+    </li>
+    <li>
+     <a href="http://www.google.com/events/io/2011/sessions/memory-management-for-android-apps.html">
+      Memory management for Android Apps
+     </a>
+     Google I/O presentation
+    </li>
+    <li>
+     <a href="/design/patterns/swipe-views.html">
+      Android Design: Swipe Views
+     </a>
+    </li>
+    <li>
+     <a href="/design/building-blocks/grid-lists.html">
+      Android Design: Grid Lists
+     </a>
+    </li>
+   </ul>
+   <h2>
+    Try it out
+   </h2>
+   <div class="download-box">
+    <a class="button" href="/downloads/samples/DisplayingBitmaps.zip">
+     Download the sample
+    </a>
+    <p class="filename">
+     DisplayingBitmaps.zip
+    </p>
+   </div>
+  </div>
+ </div>
+ <p>
+  In addition to the steps described in
+  <a href="cache-bitmap.html">
+   Caching Bitmaps
+  </a>
+  ,
+there are  specific things you can do to facilitate garbage collection
+and bitmap reuse. The recommended strategy depends on which version(s)
+of Android you are targeting. The
+  <code>
+   BitmapFun
+  </code>
+  sample app included with
+this class shows you how to design your app to work efficiently across
+different versions of Android.
+ </p>
+ <p>
+  To set the stage for this lesson, here is how Android's management of
+bitmap memory has evolved:
+ </p>
+ <ul>
+  <li>
+   On Android Android 2.2 (API level 8) and lower, when garbage 
+collection occurs, your app's threads get stopped. This causes a lag that
+can degrade performance.
+   <strong>
+    Android 2.3 adds concurrent garbage collection, which means that
+the memory is reclaimed soon after a bitmap is no longer referenced.
+   </strong>
+  </li>
+  <li>
+   On Android 2.3.3 (API level 10) and lower, the backing pixel data for a
+bitmap is stored in native memory. It is separate from the bitmap itself,
+which is stored in the Dalvik heap. The pixel data in native memory is
+not released in a predictable manner, potentially causing an application
+to briefly exceed its memory limits and crash.
+   <strong>
+    As of Android 3.0 (API level 11), the pixel data is stored on the
+Dalvik heap along with the associated bitmap.
+   </strong>
+  </li>
+ </ul>
+ <p>
+  The following sections describe how to optimize bitmap memory
+management for different Android versions.
+ </p>
+ <h2 id="recycle">
+  Manage Memory on Android 2.3.3 and Lower
+ </h2>
+ <p>
+  On Android 2.3.3 (API level 10) and lower, using
+  <code>
+   <a href="/reference/android/graphics/Bitmap.html#recycle()">
+    recycle()
+   </a>
+  </code>
+  is recommended. If you're displaying large amounts of bitmap data in your app,
+you're likely to run into
+  <code>
+   <a href="/reference/java/lang/OutOfMemoryError.html">
+    OutOfMemoryError
+   </a>
+  </code>
+  errors. The
+  <code>
+   <a href="/reference/android/graphics/Bitmap.html#recycle()">
+    recycle()
+   </a>
+  </code>
+  method allows an app
+to reclaim memory as soon as possible.
+ </p>
+ <p class="note">
+  <strong>
+   Caution:
+  </strong>
+  You should use
+  <code>
+   <a href="/reference/android/graphics/Bitmap.html#recycle()">
+    recycle()
+   </a>
+  </code>
+  only when you are sure that the
+bitmap is no longer being used. If you call
+  <code>
+   <a href="/reference/android/graphics/Bitmap.html#recycle()">
+    recycle()
+   </a>
+  </code>
+  and later attempt to draw the bitmap, you will get the error:
+  <code>
+   "Canvas: trying to use a recycled bitmap"
+  </code>
+  .
+ </p>
+ <p>
+  The following code snippet gives an example of calling
+  <code>
+   <a href="/reference/android/graphics/Bitmap.html#recycle()">
+    recycle()
+   </a>
+  </code>
+  . It uses reference counting
+(in the variables
+  <code>
+   mDisplayRefCount
+  </code>
+  and
+  <code>
+   mCacheRefCount
+  </code>
+  ) to track 
+whether a bitmap is currently being displayed or in the cache. The
+code recycles the bitmap when these conditions are met:
+ </p>
+ <ul>
+  <li>
+   The reference count for both
+   <code>
+    mDisplayRefCount
+   </code>
+   and
+   <code>
+    mCacheRefCount
+   </code>
+   is 0.
+  </li>
+  <li>
+   The bitmap is not
+   <code>
+    null
+   </code>
+   , and it hasn't been recycled yet.
+  </li>
+ </ul>
+ <pre>private int mCacheRefCount = 0;
+private int mDisplayRefCount = 0;
+...
+// Notify the drawable that the displayed state has changed.
+// Keep a count to determine when the drawable is no longer displayed.
+public void setIsDisplayed(boolean isDisplayed) {
+    synchronized (this) {
+        if (isDisplayed) {
+            mDisplayRefCount++;
+            mHasBeenDisplayed = true;
+        } else {
+            mDisplayRefCount--;
+        }
+    }
+    // Check to see if recycle() can be called.
+    checkState();
+}
+
+// Notify the drawable that the cache state has changed.
+// Keep a count to determine when the drawable is no longer being cached.
+public void setIsCached(boolean isCached) {
+    synchronized (this) {
+        if (isCached) {
+            mCacheRefCount++;
+        } else {
+            mCacheRefCount--;
+        }
+    }
+    // Check to see if recycle() can be called.
+    checkState();
+}
+
+private synchronized void checkState() {
+    // If the drawable cache and display ref counts = 0, and this drawable
+    // has been displayed, then recycle.
+    if (mCacheRefCount 
+
+<h2 id="inBitmap">Manage Memory on Android 3.0 and Higher</h2>
+
+<p>Android 3.0 (API level 11) introduces the
+<code><a href="/reference/android/graphics/BitmapFactory.Options.html#inBitmap">BitmapFactory.Options.inBitmap</a></code>
+field. If this option is set, decode methods that take the 
+<code><a href="/reference/android/graphics/BitmapFactory.Options.html">Options</a></code> object
+will attempt to reuse an existing bitmap when loading content. This means
+that the bitmap's memory is reused, resulting in improved performance, and
+removing both memory allocation and de-allocation. However, there are certain restrictions with how
+<code><a href="/reference/android/graphics/BitmapFactory.Options.html#inBitmap">inBitmap</a></code> can be used. In particular, before Android
+4.4 (API level 19), only equal sized bitmaps are supported. For details, please see the
+<code><a href="/reference/android/graphics/BitmapFactory.Options.html#inBitmap">inBitmap</a></code> documentation.
+
+</p><h3>Save a bitmap for later use</h3>
+
+<p>The following snippet demonstrates how an existing bitmap is stored for possible
+later use in the sample app. When an app is running on Android 3.0 or higher and 
+a bitmap is evicted from the <code><a href="/reference/android/util/LruCache.html">LruCache</a></code>,
+a soft reference to the bitmap is placed
+in a <code><a href="/reference/java/util/HashSet.html">HashSet</a></code>, for possible reuse later with
+<code><a href="/reference/android/graphics/BitmapFactory.Options.html#inBitmap">inBitmap</a></code>:
+
+</p><pre>Set&lt;SoftReference&lt;Bitmap&gt;&gt; mReusableBitmaps;
+private LruCache&lt;String, BitmapDrawable&gt; mMemoryCache;
+
+// If you're running on Honeycomb or newer, create a
+// synchronized HashSet of references to reusable bitmaps.
+if (Utils.hasHoneycomb()) {
+    mReusableBitmaps =
+            Collections.synchronizedSet(new HashSet&lt;SoftReference&lt;Bitmap&gt;&gt;());
+}
+
+mMemoryCache = new LruCache&lt;String, BitmapDrawable&gt;(mCacheParams.memCacheSize) {
+
+    // Notify the removed entry that is no longer being cached.
+    @Override
+    protected void entryRemoved(boolean evicted, String key,
+            BitmapDrawable oldValue, BitmapDrawable newValue) {
+        if (RecyclingBitmapDrawable.class.isInstance(oldValue)) {
+            // The removed entry is a recycling drawable, so notify it
+            // that it has been removed from the memory cache.
+            ((RecyclingBitmapDrawable) oldValue).setIsCached(false);
+        } else {
+            // The removed entry is a standard BitmapDrawable.
+            if (Utils.hasHoneycomb()) {
+                // We're running on Honeycomb or later, so add the bitmap
+                // to a SoftReference set for possible use with inBitmap later.
+                mReusableBitmaps.add
+                        (new SoftReference&lt;Bitmap&gt;(oldValue.getBitmap()));
+            }
+        }
+    }
+....
+}</pre>
+
+
+<h3>Use an existing bitmap</h3>
+<p>In the running app, decoder methods check to see if there is an existing
+bitmap they can use. For example:</p>
+
+<pre>public static Bitmap decodeSampledBitmapFromFile(String filename,
+        int reqWidth, int reqHeight, ImageCache cache) {
+
+    final BitmapFactory.Options options = new BitmapFactory.Options();
+    ...
+    BitmapFactory.decodeFile(filename, options);
+    ...
+
+    // If we're running on Honeycomb or newer, try to use inBitmap.
+    if (Utils.hasHoneycomb()) {
+        addInBitmapOptions(options, cache);
+    }
+    ...
+    return BitmapFactory.decodeFile(filename, options);
+}</pre>The next snippet shows the <code>addInBitmapOptions()</code> method that is called in the
+above snippet. It looks for an existing bitmap to set as the value for
+<code><a href="/reference/android/graphics/BitmapFactory.Options.html#inBitmap">inBitmap</a></code>. Note that this
+method only sets a value for <code><a href="/reference/android/graphics/BitmapFactory.Options.html#inBitmap">inBitmap</a></code>
+if it finds a suitable match (your code should never assume that a match will be found):
+
+<pre>private static void addInBitmapOptions(BitmapFactory.Options options,
+        ImageCache cache) {
+    // inBitmap only works with mutable bitmaps, so force the decoder to
+    // return mutable bitmaps.
+    options.inMutable = true;
+
+    if (cache != null) {
+        // Try to find a bitmap to use for inBitmap.
+        Bitmap inBitmap = cache.getBitmapFromReusableSet(options);
+
+        if (inBitmap != null) {
+            // If a suitable bitmap has been found, set it as the value of
+            // inBitmap.
+            options.inBitmap = inBitmap;
+        }
+    }
+}
+
+// This method iterates through the reusable bitmaps, looking for one 
+// to use for inBitmap:
+protected Bitmap getBitmapFromReusableSet(BitmapFactory.Options options) {
+        Bitmap bitmap = null;
+
+    if (mReusableBitmaps != null &amp;&amp; !mReusableBitmaps.isEmpty()) {
+        synchronized (mReusableBitmaps) {
+            final Iterator&lt;SoftReference&lt;Bitmap&gt;&gt; iterator
+                    = mReusableBitmaps.iterator();
+            Bitmap item;
+
+            while (iterator.hasNext()) {
+                item = iterator.next().get();
+
+                if (null != item &amp;&amp; item.isMutable()) {
+                    // Check to see it the item can be used for inBitmap.
+                    if (canUseForInBitmap(item, options)) {
+                        bitmap = item;
+
+                        // Remove from reusable set so it can't be used again.
+                        iterator.remove();
+                        break;
+                    }
+                } else {
+                    // Remove from the set if the reference has been cleared.
+                    iterator.remove();
+                }
+            }
+        }
+    }
+    return bitmap;
+}</pre>
+
+<p>Finally, this method determines whether a candidate bitmap
+satisfies the size criteria to be used for
+<code><a href="/reference/android/graphics/BitmapFactory.Options.html#inBitmap">inBitmap</a></code>:</p>
+
+<pre>static boolean canUseForInBitmap(
+        Bitmap candidate, BitmapFactory.Options targetOptions) {
+
+    if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.KITKAT) {
+        // From Android 4.4 (KitKat) onward we can re-use if the byte size of
+        // the new bitmap is smaller than the reusable bitmap candidate
+        // allocation byte count.
+        int width = targetOptions.outWidth / targetOptions.inSampleSize;
+        int height = targetOptions.outHeight / targetOptions.inSampleSize;
+        int byteCount = width * height * getBytesPerPixel(candidate.getConfig());
+        return byteCount &lt;= candidate.getAllocationByteCount();
+    }
+
+    // On earlier versions, the dimensions must match exactly and the inSampleSize must be 1
+    return candidate.getWidth() == targetOptions.outWidth
+            &amp;&amp; candidate.getHeight() == targetOptions.outHeight
+            &amp;&amp; targetOptions.inSampleSize == 1;
+}
+
+/**
+ * A helper function to return the byte usage per pixel of a bitmap based on its configuration.
+ */
+static int getBytesPerPixel(Config config) {
+    if (config == Config.ARGB_8888) {
+        return 4;
+    } else if (config == Config.RGB_565) {
+        return 2;
+    } else if (config == Config.ARGB_4444) {
+        return 2;
+    } else if (config == Config.ALPHA_8) {
+        return 1;
+    }
+    return 1;
+}</pre>
+
+</pre>
+</div><h1>Displaying Bitmaps in Your UI</h1>
+<div class="jd-descr" itemprop="articleBody">
+ <div id="tb-wrapper">
+  <div id="tb">
+   <h2>
+    This lesson teaches you to
+   </h2>
+   <ol>
+    <li>
+     <a href="#viewpager">
+      Load Bitmaps into a ViewPager Implementation
+     </a>
+    </li>
+    <li>
+     <a href="#gridview">
+      Load Bitmaps into a GridView Implementation
+     </a>
+    </li>
+   </ol>
+   <h2>
+    You should also read
+   </h2>
+   <ul>
+    <li>
+     <a href="/design/patterns/swipe-views.html">
+      Android Design: Swipe Views
+     </a>
+    </li>
+    <li>
+     <a href="/design/building-blocks/grid-lists.html">
+      Android Design: Grid Lists
+     </a>
+    </li>
+   </ul>
+   <h2>
+    Try it out
+   </h2>
+   <div class="download-box">
+    <a class="button" href="/downloads/samples/DisplayingBitmaps.zip">
+     Download the sample
+    </a>
+    <p class="filename">
+     DisplayingBitmaps.zip
+    </p>
+   </div>
+  </div>
+ </div>
+ <p>
+ </p>
+ <p>
+  This lesson brings together everything from previous lessons, showing you how to load multiple
+bitmaps into
+  <code>
+   <a href="/reference/android/support/v4/view/ViewPager.html">
+    ViewPager
+   </a>
+  </code>
+  and
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  components using a background thread and bitmap cache, while dealing with concurrency and
+configuration changes.
+ </p>
+ <h2 id="viewpager">
+  Load Bitmaps into a ViewPager Implementation
+ </h2>
+ <p>
+  The
+  <a href="/design/patterns/swipe-views.html">
+   swipe view pattern
+  </a>
+  is an excellent
+way to navigate the detail view of an image gallery. You can implement this pattern using a
+  <code>
+   <a href="/reference/android/support/v4/view/ViewPager.html">
+    ViewPager
+   </a>
+  </code>
+  component backed by a
+  <code>
+   <a href="/reference/android/support/v4/view/PagerAdapter.html">
+    PagerAdapter
+   </a>
+  </code>
+  . However, a more suitable backing adapter is the subclass
+  <code>
+   <a href="/reference/android/support/v4/app/FragmentStatePagerAdapter.html">
+    FragmentStatePagerAdapter
+   </a>
+  </code>
+  which automatically destroys and saves
+state of the
+  <code>
+   <a href="/reference/android/app/Fragment.html">
+    Fragments
+   </a>
+  </code>
+  in the
+  <code>
+   <a href="/reference/android/support/v4/view/ViewPager.html">
+    ViewPager
+   </a>
+  </code>
+  as they disappear off-screen, keeping memory usage down.
+ </p>
+ <p class="note">
+  <strong>
+   Note:
+  </strong>
+  If you have a smaller number of images and are confident they
+all fit within the application memory limit, then using a regular
+  <code>
+   <a href="/reference/android/support/v4/view/PagerAdapter.html">
+    PagerAdapter
+   </a>
+  </code>
+  or
+  <code>
+   <a href="/reference/android/support/v4/app/FragmentPagerAdapter.html">
+    FragmentPagerAdapter
+   </a>
+  </code>
+  might
+be more appropriate.
+ </p>
+ <p>
+  Here&rsquo;s an implementation of a
+  <code>
+   <a href="/reference/android/support/v4/view/ViewPager.html">
+    ViewPager
+   </a>
+  </code>
+  with
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  children. The main activity holds the
+  <code>
+   <a href="/reference/android/support/v4/view/ViewPager.html">
+    ViewPager
+   </a>
+  </code>
+  and the adapter:
+ </p>
+ <pre>
+public class ImageDetailActivity extends FragmentActivity {
+    public static final String EXTRA_IMAGE = "extra_image";
+
+    private ImagePagerAdapter mAdapter;
+    private ViewPager mPager;
+
+    // A static dataset to back the ViewPager adapter
+    public final static Integer[] imageResIds = new Integer[] {
+            R.drawable.sample_image_1, R.drawable.sample_image_2, R.drawable.sample_image_3,
+            R.drawable.sample_image_4, R.drawable.sample_image_5, R.drawable.sample_image_6,
+            R.drawable.sample_image_7, R.drawable.sample_image_8, R.drawable.sample_image_9};
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.image_detail_pager); // Contains just a ViewPager
+
+        mAdapter = new ImagePagerAdapter(getSupportFragmentManager(), imageResIds.length);
+        mPager = (ViewPager) findViewById(R.id.pager);
+        mPager.setAdapter(mAdapter);
+    }
+
+    public static class ImagePagerAdapter extends FragmentStatePagerAdapter {
+        private final int mSize;
+
+        public ImagePagerAdapter(FragmentManager fm, int size) {
+            super(fm);
+            mSize = size;
+        }
+
+        @Override
+        public int getCount() {
+            return mSize;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return ImageDetailFragment.newInstance(position);
+        }
+    }
+}
+</pre>
+ <p>
+  Here is an implementation of the details
+  <code>
+   <a href="/reference/android/app/Fragment.html">
+    Fragment
+   </a>
+  </code>
+  which holds the
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  children. This might seem like a perfectly reasonable approach, but can
+you see the drawbacks of this implementation? How could it be improved?
+ </p>
+ <pre>
+public class ImageDetailFragment extends Fragment {
+    private static final String IMAGE_DATA_EXTRA = "resId";
+    private int mImageNum;
+    private ImageView mImageView;
+
+    static ImageDetailFragment newInstance(int imageNum) {
+        final ImageDetailFragment f = new ImageDetailFragment();
+        final Bundle args = new Bundle();
+        args.putInt(IMAGE_DATA_EXTRA, imageNum);
+        f.setArguments(args);
+        return f;
+    }
+
+    // Empty constructor, required as per Fragment docs
+    public ImageDetailFragment() {}
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mImageNum = getArguments() != null ? getArguments().getInt(IMAGE_DATA_EXTRA) : -1;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+        // image_detail_fragment.xml contains just an ImageView
+        final View v = inflater.inflate(R.layout.image_detail_fragment, container, false);
+        mImageView = (ImageView) v.findViewById(R.id.imageView);
+        return v;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        final int resId = ImageDetailActivity.imageResIds[mImageNum];
+        <strong>mImageView.setImageResource(resId);</strong> // Load image into ImageView
+    }
+}
+</pre>
+ <p>
+  Hopefully you noticed the issue: the images are being read from resources on the UI thread,
+which can lead to an application hanging and being force closed. Using an
+  <code>
+   <a href="/reference/android/os/AsyncTask.html">
+    AsyncTask
+   </a>
+  </code>
+  as described in the
+  <a href="process-bitmap.html">
+   Processing Bitmaps
+Off the UI Thread
+  </a>
+  lesson, it&rsquo;s straightforward to move image loading and processing to a
+background thread:
+ </p>
+ <pre>
+public class ImageDetailActivity extends FragmentActivity {
+    ...
+
+    public void loadBitmap(int resId, ImageView imageView) {
+        mImageView.setImageResource(R.drawable.image_placeholder);
+        BitmapWorkerTask task = new BitmapWorkerTask(mImageView);
+        task.execute(resId);
+    }
+
+    ... // include <a href="process-bitmap.html#BitmapWorkerTask"><code>BitmapWorkerTask</code></a> class
+}
+
+public class ImageDetailFragment extends Fragment {
+    ...
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (ImageDetailActivity.class.isInstance(getActivity())) {
+            final int resId = ImageDetailActivity.imageResIds[mImageNum];
+            // Call out to ImageDetailActivity to load the bitmap in a background thread
+            ((ImageDetailActivity) getActivity()).loadBitmap(resId, mImageView);
+        }
+    }
+}
+</pre>
+ <p>
+  Any additional processing (such as resizing or fetching images from the network) can take place
+in the
+  <a href="process-bitmap.html#BitmapWorkerTask">
+   <code>
+    BitmapWorkerTask
+   </code>
+  </a>
+  without affecting
+responsiveness of the main UI. If the background thread is doing more than just loading an image
+directly from disk, it can also be beneficial to add a memory and/or disk cache as described in the
+lesson
+  <a href="cache-bitmap.html#memory-cache">
+   Caching Bitmaps
+  </a>
+  . Here's the additional
+modifications for a memory cache:
+ </p>
+ <pre>
+public class ImageDetailActivity extends FragmentActivity {
+    ...
+    private LruCache&lt;String, Bitmap&gt; mMemoryCache;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        ...
+        // initialize LruCache as per <a href="cache-bitmap.html#memory-cache">Use a Memory Cache</a> section
+    }
+
+    public void loadBitmap(int resId, ImageView imageView) {
+        final String imageKey = String.valueOf(resId);
+
+        final Bitmap bitmap = mMemoryCache.get(imageKey);
+        if (bitmap != null) {
+            mImageView.setImageBitmap(bitmap);
+        } else {
+            mImageView.setImageResource(R.drawable.image_placeholder);
+            BitmapWorkerTask task = new BitmapWorkerTask(mImageView);
+            task.execute(resId);
+        }
+    }
+
+    ... // include updated BitmapWorkerTask from <a href="cache-bitmap.html#memory-cache">Use a Memory Cache</a> section
+}
+</pre>
+ <p>
+  Putting all these pieces together gives you a responsive
+  <code>
+   <a href="/reference/android/support/v4/view/ViewPager.html">
+    ViewPager
+   </a>
+  </code>
+  implementation with minimal image loading latency and the ability
+to do as much or as little background processing on your images as needed.
+ </p>
+ <h2 id="gridview">
+  Load Bitmaps into a GridView Implementation
+ </h2>
+ <p>
+  The
+  <a href="/design/building-blocks/grid-lists.html">
+   grid list building block
+  </a>
+  is
+useful for showing image data sets and can be implemented using a
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  component in which many images can be on-screen at any one time and many more need to be ready to
+appear if the user scrolls up or down. When implementing this type of control, you must ensure the
+UI remains fluid, memory usage remains under control and concurrency is handled correctly (due to
+the way
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  recycles its children views).
+ </p>
+ <p>
+  To start with, here is a standard
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  implementation with
+  <code>
+   <a href="/reference/android/widget/ImageView.html">
+    ImageView
+   </a>
+  </code>
+  children placed inside a
+  <code>
+   <a href="/reference/android/app/Fragment.html">
+    Fragment
+   </a>
+  </code>
+  . Again, this might
+seem like a perfectly reasonable approach, but what would make it better?
+ </p>
+ <pre>
+public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener {
+    private ImageAdapter mAdapter;
+
+    // A static dataset to back the GridView adapter
+    public final static Integer[] imageResIds = new Integer[] {
+            R.drawable.sample_image_1, R.drawable.sample_image_2, R.drawable.sample_image_3,
+            R.drawable.sample_image_4, R.drawable.sample_image_5, R.drawable.sample_image_6,
+            R.drawable.sample_image_7, R.drawable.sample_image_8, R.drawable.sample_image_9};
+
+    // Empty constructor as per Fragment docs
+    public ImageGridFragment() {}
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mAdapter = new ImageAdapter(getActivity());
+    }
+
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View v = inflater.inflate(R.layout.image_grid_fragment, container, false);
+        final GridView mGridView = (GridView) v.findViewById(R.id.gridView);
+        mGridView.setAdapter(mAdapter);
+        mGridView.setOnItemClickListener(this);
+        return v;
+    }
+
+    @Override
+    public void onItemClick(AdapterView&lt;?&gt; parent, View v, int position, long id) {
+        final Intent i = new Intent(getActivity(), ImageDetailActivity.class);
+        i.putExtra(ImageDetailActivity.EXTRA_IMAGE, position);
+        startActivity(i);
+    }
+
+    private class ImageAdapter extends BaseAdapter {
+        private final Context mContext;
+
+        public ImageAdapter(Context context) {
+            super();
+            mContext = context;
+        }
+
+        @Override
+        public int getCount() {
+            return imageResIds.length;
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return imageResIds[position];
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup container) {
+            ImageView imageView;
+            if (convertView == null) { // if it's not recycled, initialize some attributes
+                imageView = new ImageView(mContext);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                imageView.setLayoutParams(new GridView.LayoutParams(
+                        LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+            } else {
+                imageView = (ImageView) convertView;
+            }
+            <strong>imageView.setImageResource(imageResIds[position]);</strong> // Load image into ImageView
+            return imageView;
+        }
+    }
+}
+</pre>
+ <p>
+  Once again, the problem with this implementation is that the image is being set in the UI thread.
+While this may work for small, simple images (due to system resource loading and caching), if any
+additional processing needs to be done, your UI grinds to a halt.
+ </p>
+ <p>
+  The same asynchronous processing and caching methods from the previous section can be implemented
+here. However, you also need to wary of concurrency issues as the
+  <code>
+   <a href="/reference/android/widget/GridView.html">
+    GridView
+   </a>
+  </code>
+  recycles its children views. To handle this, use the techniques discussed in the
+  <a href="process-bitmap.html#concurrency">
+   Processing Bitmaps Off the UI Thread
+  </a>
+  lesson. Here is the
+updated
+solution:
+ </p>
+ <pre>
+public class ImageGridFragment extends Fragment implements AdapterView.OnItemClickListener {
+    ...
+
+    private class ImageAdapter extends BaseAdapter {
+        ...
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup container) {
+            ...
+            <strong>loadBitmap(imageResIds[position], imageView)</strong>
+            return imageView;
+        }
+    }
+
+    public void loadBitmap(int resId, ImageView imageView) {
+        if (cancelPotentialWork(resId, imageView)) {
+            final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+            final AsyncDrawable asyncDrawable =
+                    new AsyncDrawable(getResources(), mPlaceHolderBitmap, task);
+            imageView.setImageDrawable(asyncDrawable);
+            task.execute(resId);
+        }
+    }
+
+    static class AsyncDrawable extends BitmapDrawable {
+        private final WeakReference&lt;BitmapWorkerTask&gt; bitmapWorkerTaskReference;
+
+        public AsyncDrawable(Resources res, Bitmap bitmap,
+                BitmapWorkerTask bitmapWorkerTask) {
+            super(res, bitmap);
+            bitmapWorkerTaskReference =
+                new WeakReference&lt;BitmapWorkerTask&gt;(bitmapWorkerTask);
+        }
+
+        public BitmapWorkerTask getBitmapWorkerTask() {
+            return bitmapWorkerTaskReference.get();
+        }
+    }
+
+    public static boolean cancelPotentialWork(int data, ImageView imageView) {
+        final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
+
+        if (bitmapWorkerTask != null) {
+            final int bitmapData = bitmapWorkerTask.data;
+            if (bitmapData != data) {
+                // Cancel previous task
+                bitmapWorkerTask.cancel(true);
+            } else {
+                // The same work is already in progress
+                return false;
+            }
+        }
+        // No task associated with the ImageView, or an existing task was cancelled
+        return true;
+    }
+
+    private static BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
+       if (imageView != null) {
+           final Drawable drawable = imageView.getDrawable();
+           if (drawable instanceof AsyncDrawable) {
+               final AsyncDrawable asyncDrawable = (AsyncDrawable) drawable;
+               return asyncDrawable.getBitmapWorkerTask();
+           }
+        }
+        return null;
+    }
+
+    ... // include updated <a href="process-bitmap.html#BitmapWorkerTaskUpdated"><code>BitmapWorkerTask</code></a> class
+</pre>
+ <p class="note">
+  <strong>
+   Note:
+  </strong>
+  The same code can easily be adapted to work with
+  <code>
+   <a href="/reference/android/widget/ListView.html">
+    ListView
+   </a>
+  </code>
+  as well.
+ </p>
+ <p>
+  This implementation allows for flexibility in how the images are processed and loaded without
+impeding the smoothness of the UI. In the background task you can load images from the network or
+resize large digital camera photos and the images appear as the tasks finish processing.
+ </p>
+ <p>
+  For a full example of this and other concepts discussed in this lesson, please see the included
+sample application.
+ </p>
+</div>

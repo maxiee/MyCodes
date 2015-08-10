@@ -14,29 +14,39 @@ file_blacklist = ['README.md', 'index.html', '.swp', '.directory', '.png', '.git
 content_blacklist = ['resume.md']
 
 total_count = 0
+id_count = 0
 
 def generateContent(p):
     global total_count
+    global id_count
     res = []
     dfs = p.iterdir()
     for i in dfs:
-        if i.is_dir():
+        if i.is_dir(): #笔记目录
             if not isInBlacklist(directory_blacklist, i.name):
                 dir_dict = {}
+                dir_dict['label'] = i.name
                 dir_dict['text'] = i.name
+                dir_dict['id'] = id_count
+                id_count += 1
                 nodes = generateContent(i)
                 if nodes is not []:
-                    dir_dict['nodes'] = nodes
+                    dir_dict['children'] = nodes
                 res.append(dir_dict)
-        else: # file
+        else: #笔记文件
             if not isInBlacklist(file_blacklist, i.name):
                 if '.md' in i.name: # .md 静态化
                     generateHtml(i)
                 if not isInBlacklist(content_blacklist, i.name):
                     file_dict = {}
-                    file_dict['text'] = i.name.replace('.md', '')
-                    #file_dict['href'] = str(i)[str(i).find('posts')+len('posts/'):].replace('.mk','').replace("/","-")
-                    file_dict['href'] = URL_BASE + str.join(".", i.name.split('.')[:-1]) + '.html'
+                    #file_dict['label'] = i.name.replace('.md', '')
+                    #file_dict['href'] = URL_BASE + str.join(".", i.name.split('.')[:-1]) + '.html'
+                    label = i.name.replace('.md', '')
+                    href = URL_BASE + str.join(".", i.name.split('.')[:-1]) + '.html'
+                    file_dict['text'] = label 
+                    file_dict['label'] = '<a href="%s">%s</a>' % (href, label)
+                    file_dict['id'] = id_count
+                    id_count += 1
                     res.append(file_dict)
                     total_count += 1
     return sorted(res, key=lambda k: k['text'])
@@ -58,6 +68,7 @@ def generateHtml(mdPath):
                 'markdown.extensions.tables'])
     # convert pics
     content = re.sub(r'(figure+)', PIC_BASE + str(mdPath.parent).replace(str(p), "") + r'/\1', content)
+    content = content.replace('<img ', '<img class="img-responsive" ')
     header = template.HEADER % str.join(".", mdPath.name.split('.')[:-1])
     body = template.BODY % content
     content = header + body
@@ -65,7 +76,6 @@ def generateHtml(mdPath):
     htmlFile.write(content)
     mdFile.close()
     htmlFile.close()
-    
 
 def getContent():
     return json.dumps(generateContent(p))
@@ -94,7 +104,7 @@ if __name__ == "__main__":
     content = generateContent(p)
     # 生成目录
     f = open(OUTPUT, 'w')
-    content = 'var tree = ' + json.dumps(content, ensure_ascii=False)
+    content = 'var data = ' + json.dumps(content, ensure_ascii=False)
     f.write(content)
     f.close()
     # 生成主页

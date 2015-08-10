@@ -2,7 +2,10 @@ from urllib.request import urlopen, Request, build_opener, install_opener, Proxy
 from bs4 import BeautifulSoup
 import os.path
 
-BASE_URL = 'http://developer.android.com/training'
+BASE_TRAINING = 'http://developer.android.com/training'
+BASE_GUIDE = 'http://developer.android.com/guide'
+
+BASE_URL = BASE_GUIDE
 
 HTML_dir = 'html/'
 
@@ -39,6 +42,33 @@ def exrtract_page(url, title):
     output.write(
             header
             + main_content)
+
+def exrtract_multi_pages(urls, title):
+    proxies = {'http': '127.0.0.1:8118'}
+    proxy = ProxyHandler(proxies)
+    opener = build_opener(proxy)
+    install_opener(opener)
+
+    file_path = HTML_dir + title + '.html'
+    all_content = ""
+    for url in urls:
+        print("extracting %s" % url)
+        request = Request(url)
+        content = urlopen(request, timeout=30).read()
+        soup = BeautifulSoup(content)
+
+        page_title = soup.find('h1', {'itemprop': 'name'}).get_text()
+        header = \
+            '<h1>' \
+            + page_title \
+            + '</h1>\n'
+
+        main_content = soup.find('div', {'itemprop': 'articleBody'}).prettify(formatter='html')
+        main_content = main_content.replace('/images/', 'http://developer.android.com/images/')
+        all_content += header + main_content
+
+    output = open(file_path, 'w')
+    output.write(all_content)
 
 def add_content(page, title, cls):
     info_page.append(page)
@@ -83,4 +113,27 @@ def parse_content():
 
 
 
-parse_content()
+#parse_content()
+
+urls = [
+        "http://developer.android.com/guide/components/intents-filters.html",
+        "http://developer.android.com/guide/components/intents-common.html",
+        "http://developer.android.com/guide/components/activities.html",
+        "http://developer.android.com/guide/components/fragments.html",
+        "http://developer.android.com/guide/components/loaders.html",
+        "http://developer.android.com/guide/components/tasks-and-back-stack.html",
+        "http://developer.android.com/guide/components/recents.html",
+        "http://developer.android.com/guide/components/services.html",
+        "http://developer.android.com/guide/components/bound-services.html",
+        "http://developer.android.com/guide/components/aidl.html",
+        "http://developer.android.com/guide/topics/providers/content-providers.html",
+        "http://developer.android.com/guide/topics/providers/content-provider-basics.html",
+        "http://developer.android.com/guide/topics/providers/content-provider-creating.html",
+        "http://developer.android.com/guide/topics/providers/calendar-provider.html",
+        "http://developer.android.com/guide/topics/providers/contacts-provider.html",
+        "http://developer.android.com/guide/topics/providers/document-provider.html",
+        "http://developer.android.com/guide/topics/appwidgets/index.html",
+        "http://developer.android.com/guide/topics/appwidgets/host.html",
+        "http://developer.android.com/guide/components/processes-and-threads.html"
+        ]
+exrtract_multi_pages(urls, "1")

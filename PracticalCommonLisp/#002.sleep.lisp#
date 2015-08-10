@@ -1,0 +1,5 @@
+(defun ask ()
+  (format t "告诉我，这么晚了你为何还不睡？")
+  (read))
+
+
