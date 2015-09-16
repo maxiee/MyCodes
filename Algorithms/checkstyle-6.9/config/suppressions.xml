@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+
+<suppressions>
+    <suppress checks="FileLength"
+              files="TokenTypes.java"
+              lines="1"/>
+
+    <!-- we can not change it as, Check name is part of API (used in configurations) -->
+    <suppress checks="AbbreviationAsWordInName"
+              files="JavaNCSSCheck.java"
+              lines="41"/>
+
+    <!-- illegal words are part of Javadoc -->
+    <suppress checks="TodoComment" files=".*TodoCommentCheck\.java"/>
+
+    <!-- All disallowed characters are stored there -->
+    <suppress checks="AvoidEscapedUnicodeCharactersCheck"
+              files="AvoidEscapedUnicodeCharactersCheck.java"/>
+
+    <!-- Can not change API -->
+    <suppress checks="AbstractClassNameCheck"
+              files="Check.java"/>
+
+    <!-- 'Abstract' pattern is used to show it is checking for abstract class name -->
+    <suppress checks="AbstractClassNameCheck"
+              files="AbstractClassNameCheck.java"/>
+
+    <!-- Tone down the checking for test code -->
+    <suppress checks="EmptyBlock" files=".*[\\/]src[\\/]test[\\/]"/>
+    <suppress checks="ImportControl" files=".*[\\/]src[\\/]test[\\/]"/>
+    <suppress checks="Javadoc" files=".*[\\/]src[\\/]test[\\/]"/>
+    <suppress checks="MagicNumber" files=".*[\\/]src[\\/]test[\\/]"/>
+    <suppress checks="AvoidStaticImport" files=".*[\\/]src[\\/]test[\\/]"/>
+    <suppress checks="MethodCount" files="[\\/]IndentationCheckTest.java$"/>
+    <suppress checks="MethodCount" files="[\\/]MainTest.java$"/>
+    <suppress checks="EqualsAvoidNull" files="[\\/]Int.*FilterTest.java$"/>
+
+    <!-- suppressions to remove over time -->
+    <suppress checks="FinalLocalVariable" files=".*[\\/]src[\\/]test[\\/]"/>
+    <suppress checks="LineLength" files=".*[\\/]src[\\/]test[\\/]"/>
+    <suppress checks="Name" files=".*[\\/]src[\\/]test[\\/]"/>    
+
+    <!--
+      Turn off all checks for Generated and Test code. Fixes issues with using
+      Eclipse plug-in.
+      -->
+    <suppress checks="." files=".*[\\/]grammars[\\/]Generated[a-zA-Z]*\.java"/>
+    <suppress checks="." files=".*[\\/]grammars[\\/]Generated[a-zA-Z]*\.java"/>
+    <suppress checks="." files=".*[\\/]checkstyle[\\/]gui[\\/]"/>
+
+    <!-- Methods that build fake AST are very long-->
+    <suppress checks="MethodLength" files="src[\\/]test[\\/]java[\\/]com[\\/]puppycrawl[\\/]tools[\\/]checkstyle[\\/]comments[\\/]CommentsTest\.java"/>
+
+    <!-- False-positive while using @see -->
+    <suppress checks="UnusedImports" files="api[\\/]DetailNode\.java"/>
+    <suppress checks="UnusedImports" files="checks[\\/]javadoc[\\/]AbstractJavadocCheck\.java"/>
+
+    <suppress checks="." files=".*JavadocTokenTypes\.java"/>
+    <suppress checks="." files=".*ParseTreeBuilder\.java"/>
+</suppressions>

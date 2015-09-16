@@ -5,7 +5,7 @@ import os.path
 BASE_TRAINING = 'http://developer.android.com/training'
 BASE_GUIDE = 'http://developer.android.com/guide'
 
-BASE_URL = BASE_GUIDE
+BASE_URL = BASE_TRAINING
 
 HTML_dir = 'html/'
 
@@ -19,6 +19,7 @@ def exrtract_page(url, title):
     proxies = {'http': '127.0.0.1:8118'}
     proxy = ProxyHandler(proxies)
     opener = build_opener(proxy)
+    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
     install_opener(opener)
 
     file_path = HTML_dir + title + '.html'
@@ -55,6 +56,8 @@ def exrtract_multi_pages(urls, title):
         print("extracting %s" % url)
         request = Request(url)
         content = urlopen(request, timeout=30).read()
+        if content is not None:
+            print("返回结果不为空")
         soup = BeautifulSoup(content)
 
         page_title = soup.find('h1', {'itemprop': 'name'}).get_text()
@@ -64,7 +67,8 @@ def exrtract_multi_pages(urls, title):
             + '</h1>\n'
 
         main_content = soup.find('div', {'itemprop': 'articleBody'}).prettify(formatter='html')
-        main_content = main_content.replace('/images/', 'http://developer.android.com/images/')
+        #main_content = main_content.replace('/images/', 'http://developer.android.com/images/')
+        main_content = main_content.replace(' src="', ' src="http://developer.android.com/')
         all_content += header + main_content
 
     output = open(file_path, 'w')
@@ -116,24 +120,15 @@ def parse_content():
 #parse_content()
 
 urls = [
-        "http://developer.android.com/guide/components/intents-filters.html",
-        "http://developer.android.com/guide/components/intents-common.html",
-        "http://developer.android.com/guide/components/activities.html",
-        "http://developer.android.com/guide/components/fragments.html",
-        "http://developer.android.com/guide/components/loaders.html",
-        "http://developer.android.com/guide/components/tasks-and-back-stack.html",
-        "http://developer.android.com/guide/components/recents.html",
-        "http://developer.android.com/guide/components/services.html",
-        "http://developer.android.com/guide/components/bound-services.html",
-        "http://developer.android.com/guide/components/aidl.html",
-        "http://developer.android.com/guide/topics/providers/content-providers.html",
-        "http://developer.android.com/guide/topics/providers/content-provider-basics.html",
-        "http://developer.android.com/guide/topics/providers/content-provider-creating.html",
-        "http://developer.android.com/guide/topics/providers/calendar-provider.html",
-        "http://developer.android.com/guide/topics/providers/contacts-provider.html",
-        "http://developer.android.com/guide/topics/providers/document-provider.html",
-        "http://developer.android.com/guide/topics/appwidgets/index.html",
-        "http://developer.android.com/guide/topics/appwidgets/host.html",
-        "http://developer.android.com/guide/components/processes-and-threads.html"
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/index.html",
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/designing.html",
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/service.html",
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/drawing.html",
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/information.html",
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/interacting.html",
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/configuration.html",
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/issues.html",
+        "http://developer.android.com/intl/zh-cn/training/wearables/watch-faces/performance.html"
         ]
+
 exrtract_multi_pages(urls, "1")

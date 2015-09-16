@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# *************************************************
+# java-algs4
+# Hayk Martirosyan
+# -------------------
+# Wrapper for java that includes algs4.jar.
+# *************************************************
+
+# This must match the install directory
+INSTALL=~/algs4
+
+# Sets the path to the classpath libraries
+jars=(.:${INSTALL}/algs4.jar)
+
+java -cp "$jars" "$@"

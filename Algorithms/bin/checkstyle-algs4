@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# *************************************************
+# checkstyle-algs4
+# Hayk Martirosyan
+# -------------------
+# Easy-to-understand wrapper for using checkstyle.
+# *************************************************
+
+# This must match the unzipped folder name of checkstyle
+CHECKSTYLE=checkstyle-?.?
+
+# This must match the install directory
+INSTALL=~/algs4
+
+# Sets the paths to arrays of matching checkstyle jar and xml files
+jar=(${INSTALL}/${CHECKSTYLE}/${CHECKSTYLE}-all.jar)
+xml=(${INSTALL}/${CHECKSTYLE}/checkstyle.xml)
+
+# Extracts the latest version of each file from the array
+jar=${jar[${#jar[@]}-1]}
+xml=${xml[${#xml[@]}-1]}
+
+# If there are no arguments
+if [ ! -n "$1" ]; then
+	echo 'Specify .java files as arguments.'
+	echo "Usage: 'checkstyle Test.java'"
+	exit
+fi
+
+# If the first argument is a .java file that exists, runs checkstyle
+if [ "${1##*.}" = "java" ]; then
+	if [ -e "$1" ]; then
+		echo "Running checkstyle on $*:"
+		java -jar "${jar}" -c "${xml}" $*
+	else
+		echo "File not found! Make sure you are specifying the path correctly."
+		echo "The filename is case sensitive."
+	fi
+else
+	echo "Checkstyle needs a .java file as an argument!"
+	echo "The filename is case sensitive."
+fi

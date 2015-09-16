@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# *************************************************
+# findbugs-algs4
+# Hayk Martirosyan
+# -------------------
+# Easy-to-understand wrapper for using findbugs.
+# *************************************************
+
+# This must match the unzipped folder name of findbugs
+FINDBUGS=findbugs-?.?.?
+
+# This must match the specified install directory
+INSTALL=~/algs4
+
+# Sets the paths to arrays of matching checkstyle jar and xml files
+jar=(${INSTALL}/${FINDBUGS}/lib/findbugs.jar)
+xml=(${INSTALL}/${FINDBUGS}/findbugs.xml)
+
+# Extracts the latest version of each file from the array
+jar=${jar[${#jar[@]}-1]}
+xml=${xml[${#xml[@]}-1]}
+
+# Sets the path to the auxiliary libraries
+aux=(${INSTALL}/algs4.jar)
+
+# If there are no arguments
+if [ ! -n "$1" ]; then
+	echo 'Specify .class or .jar files as arguments.'
+	echo "Usage: 'findbugs Test.class'"
+	exit
+fi
+
+# If the first argument is a .class file that exists, runs findbugs
+if [ "${1##*.}" = "class" ]; then
+	if [ -e "$1" ]; then
+		echo "Running findbugs on $*:"
+		java -jar "${jar}" -textui -longBugCodes -exclude "${xml}" -auxclasspath "${aux}" $*
+	else
+		echo "File not found! Make sure you are specifying the path correctly."
+		echo "The filename is case sensitive."
+	fi
+	exit
+fi
+
+# If the first argument is a .jar file that exists, runs findbugs
+if [ "${1##*.}" = "jar" ]; then
+	if [ -e "$1" ]; then
+		echo "Running findbugs on $*:"
+		java -jar "${jar}" -textui -longBugCodes -exclude "${xml}" -auxclasspath "${aux}" $*
+	else
+		echo "File not found! Make sure you are specifying the path correctly."
+		echo "The filename is case sensitive."
+	fi
+	exit
+fi
+
+echo "Findbugs needs .class or .jar files as arguments!"
+echo "The filename is case sensitive."
+exit
