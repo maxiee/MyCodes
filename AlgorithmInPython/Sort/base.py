@@ -114,22 +114,61 @@ class Merge(Base):
         self.sort_sub(mid + 1, hi)
         self.merge(lo, mid, hi)
 
+class Quick(Base):
+    def sort(self):
+        self.sort_sub(0, len(self.data) -1)
+        return self.data
+
+    def sort_sub(self, lo, hi):
+        if hi <= lo:
+            return
+        j = self.partition(lo, hi)
+        self.sort_sub(lo, j-1)
+        self.sort_sub(j+1, hi)
+
+    def partition(self, lo, hi):
+        i = lo
+        j = hi + 1
+        v = lo
+        while True:
+            i += 1
+            while self.less(i, v):
+                i += 1
+                if i == hi:
+                    break
+            j -= 1
+            while self.more(j, v):
+                j -= 1
+                if j == lo:
+                    break
+            if i >= j:
+                break
+            self.exch(i, j)
+        self.exch(lo, j)
+        return j
+
+
 if __name__ == "__main__":
     for i in range(1):
-        length = 5000
+        length = 1000
+        # 创建对象
         l = utils.gen_string_list(length)
         s = SelectSort(list(l))
         n = InsertSort(list(l))
         shell = Shell(list(l))
         m = Merge(list(l))
+        q = Quick(list(l))
+        # 创建定时器
         t1 = timeit.Timer('s.sort()', "from __main__ import s, l")
         t2 = timeit.Timer('n.sort()', "from __main__ import n, l")
         t3 = timeit.Timer('shell.sort()', "from __main__ import shell, l")
         t4 = timeit.Timer('m.sort()', "from __main__ import m, l")
+        t5 = timeit.Timer('q.sort()', "from __main__ import q, l")
         print("=========第%d轮==========" % i)
         print("随机数组长度为 %d" % length)
         print("选择排序时间:" + str(t1.timeit(1)), ",排序正确:" + str(s.is_sorted()))
         print("插入排序时间:" + str(t2.timeit(1)), ",排序正确:" + str(n.is_sorted()))
         print("希尔排序时间:" + str(t3.timeit(1)), ",排序正确:" + str(shell.is_sorted()))
         print("自顶向下归并:" + str(t4.timeit(1)), ",排序正确:" + str(m.is_sorted()))
+        print("快速排序事件:" + str(t5.timeit(1)), ",排序正确:" + str(q.is_sorted()))
         print("-------------------------")
