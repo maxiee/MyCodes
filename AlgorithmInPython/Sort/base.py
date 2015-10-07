@@ -170,5 +170,5 @@ if __name__ == "__main__":
         print("插入排序时间:" + str(t2.timeit(1)), ",排序正确:" + str(n.is_sorted()))
         print("希尔排序时间:" + str(t3.timeit(1)), ",排序正确:" + str(shell.is_sorted()))
         print("自顶向下归并:" + str(t4.timeit(1)), ",排序正确:" + str(m.is_sorted()))
-        print("快速排序事件:" + str(t5.timeit(1)), ",排序正确:" + str(q.is_sorted()))
+        print("快速排序时间:" + str(t5.timeit(1)), ",排序正确:" + str(q.is_sorted()))
         print("-------------------------")
