@@ -53,7 +53,6 @@ class Shell(Base):
 class Merge(Base):
     def __init__(self, data):
         super().__init__(data)
-        self.aux = list(data)
 
     def sort(self):
         self.sort_sub(0, len(self.data) - 1)
@@ -62,12 +61,32 @@ class Merge(Base):
     #递归排序
     def sort_sub(self, lo, hi):
         #填写算法
-        pass
+        if hi <= lo:
+            return
+        mid = lo + int((hi - lo) / 2)
+        self.sort_sub(lo, mid)
+        self.sort_sub(mid+1, hi)
+        self.merge(lo, mid, hi)
 
     #归并方法
     def merge(self, lo, mid, hi):
         #填写算法
-        pass
+        i = lo
+        j = mid + 1
+        self.aux = list(self.data)
+        for k in range(lo, hi + 1):
+            if i > mid:
+                self.data[k] = self.aux[j]
+                j += 1
+            elif j > hi:
+                self.data[k] = self.aux[i]
+                i += 1
+            elif self.aux[i] < self.aux[j]:
+                self.data[k] = self.aux[i]
+                i += 1
+            else:
+                self.data[k] = self.aux[j]
+                j += 1
 
 #快排
 class Quick(Base):
@@ -119,5 +138,5 @@ if __name__ == "__main__":
     # sort_and_test("选择排序", SelectSort, l)
     # sort_and_test("插入排序", InsertSort, l)
     # sort_and_test("希尔排序", Shell, l)
-    # sort_and_test("自顶向下归并", Merge, l)
+    sort_and_test("自顶向下归并", Merge, l)
     sort_and_test("快速排序", Quick, l)
