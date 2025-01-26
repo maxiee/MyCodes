@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.95"
-clap = "4.5.27"
+clap = { version= "4.5.27", features = ["derive"] }
 colored = "3.0.0"
 jsonxf = "1.1.1"
 mime = "0.3.17"
