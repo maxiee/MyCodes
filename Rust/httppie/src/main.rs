@@ -1,4 +1,6 @@
+use anyhow::Result;
 use clap::{Parser, Subcommand};
+use reqwest::{header, Client, Response};
 use std::str::FromStr;
 
 /// A naive httpie implementation with Rust, can you imagine how easy it is?
@@ -79,7 +81,30 @@ fn parse_kv_pair(s: &str) -> Result<KvPair, String> {
     s.parse()
 }
 
-fn main() {
-    let opts: Opts = Opts::parse(); // 使用 Opts::parse() 而不是 Clap::parse()
-    println!("{:?}", opts);
+async fn get(client: Client, args: &Get) -> Result<()> {
+    let resp = client.get(&args.url).send().await?;
+    println!("{:?}", resp.text().await?);
+    Ok(())
+}
+
+async fn post(client: Client, args: &Post) -> Result<()> {
+    let mut body = std::collections::HashMap::new();
+    for pair in args.body.iter() {
+        body.insert(&pair.key, &pair.value);
+    }
+    let resp = client.post(&args.url).json(&body).send().await?;
+    println!("{:?}", resp.text().await?);
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let opts: Opts = Opts::parse();
+    let client = Client::new();
+    let result = match opts.subcmd {
+        SubCommand::Get(ref args) => get(client, args).await?,
+        SubCommand::Post(ref args) => post(client, args).await?,
+    };
+
+    Ok(result)
 }
