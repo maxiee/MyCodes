@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use std::str::FromStr;
 
 /// A naive httpie implementation with Rust, can you imagine how easy it is?
 #[derive(Parser, Debug)]
@@ -44,8 +45,38 @@ struct Post {
     #[arg(value_name = "URL")]
     url: String,
     /// HTTP 请求的 body，可以多次输入 key=value
-    #[arg(value_name = "KEY=VALUE")] //  更新了 #[arg] 的用法
-    body: Vec<String>,
+    #[arg(value_name = "KEY=VALUE", value_parser=parse_kv_pair)] //  更新了 #[arg] 的用法
+    body: Vec<KvPair>,
+}
+
+/// 命令行中的 key=value 可以通过 parse_kv_pair 解析成 KvPair 结构
+#[derive(Debug, Clone)]
+struct KvPair {
+    key: String,
+    value: String,
+}
+
+impl FromStr for KvPair {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // 使用 = 进行 split，这会得到一个迭代器
+        let mut split = s.split("=");
+        let key = split.next().ok_or("missing key")?;
+        let value = split.next().ok_or("missing value")?;
+        if split.next().is_some() {
+            return Err("invalid key=value".to_string());
+        }
+        Ok(KvPair {
+            key: key.to_string(),
+            value: value.to_string(),
+        })
+    }
+}
+
+/// 因为我们为 KvPair 实现了 FromStr，这里可以直接 s.parse() 得到 KvPair
+fn parse_kv_pair(s: &str) -> Result<KvPair, String> {
+    s.parse()
 }
 
 fn main() {
