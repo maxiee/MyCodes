@@ -12,4 +12,4 @@ model = OpenAIServerModel(model_id="Qwen/Qwen2.5-7B-Instruct", api_base=api_base
 agent = CodeAgent(tools=[DuckDuckGoSearchTool()], model=model)
 
 agent.write_memory_to_messages()
-agent.run('How to use LLM for reading source code?')
+agent.run('什么是大模型?')
