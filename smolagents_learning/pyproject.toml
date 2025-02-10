@@ -5,5 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "gradio-client>=1.7.0",
     "smolagents[openai]>=1.8.0",
 ]
