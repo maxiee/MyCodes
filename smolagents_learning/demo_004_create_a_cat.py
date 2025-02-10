@@ -4,11 +4,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-model_id = os.getenv(
-    "siliconflow_model_Qwen2.5-Coder-7B-Instruct"
-)  # "Qwen/Qwen2.5-7B-Instruct"
-api_base = os.getenv("siliconflow_api_base")
-api_key = os.getenv("siliconflow_key")
+model_id = os.getenv("tencent_model_deepseek_v3")  # "Qwen/Qwen2.5-7B-Instruct"
+api_base = os.getenv("tencent_apibase")
+api_key = os.getenv("tencent_key")
 
 model = OpenAIServerModel(model_id=model_id, api_base=api_base, api_key=api_key)
 agent = CodeAgent(
@@ -22,4 +20,4 @@ agent = CodeAgent(
     model=model,
 )
 
-agent.run("Create a iamge of 'a cat coding using a retro computer'")
+agent.run("Create a image of 'a cat coding using a retro computer'. First improve the prompt, and then Generate an image from the prompt")
