@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-model_id = os.getenv("tencent_model_deepseek_v3")  # "Qwen/Qwen2.5-7B-Instruct"
-api_base = os.getenv("tencent_apibase")
-api_key = os.getenv("tencent_key")
+model_id = os.getenv("siliconflow_model_Qwen2.5-Coder-7B-Instruct")  # "Qwen/Qwen2.5-7B-Instruct"
+api_base = os.getenv("siliconflow_api_base")
+api_key = os.getenv("siliconflow_key")
 
 @tool
 def get_joke() -> str:
@@ -50,4 +50,5 @@ agent = CodeAgent(
     model=model,
 )
 
-agent.run("fetch a joke. improve the fetched joke into an imgae generation prompt. generate a funny image with the generated prompt.")
+print('running agent')
+agent.run("fetch a joke. improve the fetched joke into an detailed imgae generation prompt, which is a funny crazy meme image. And then generate a image with the generated prompt.")
